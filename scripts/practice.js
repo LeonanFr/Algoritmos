@@ -101,7 +101,7 @@ function renderChallengeList() {
             if (challenge) {
                 currentChallenge = challenge;
                 renderChallenge(challenge);
-                renderChallengeList(); // atualiza a classe 'active'
+                renderChallengeList();
                 if (editor) editor.setValue('');
             }
         });
@@ -192,7 +192,8 @@ async function handleSubmission(type) {
         const result = await submitPracticeCode({
             challengeId: currentChallenge.id,
             language: languageSelect.value,
-            code: code
+            code: code,
+            type: type
         });
         showLoading(false);
         if (type === 'test') {
