@@ -119,16 +119,49 @@ async function submitPracticeCode(payload) {
 function renderChallenge(challenge) {
     currentChallenge = challenge;
     problemTitle.innerText = challenge.title;
-    problemMeta.innerHTML = `<span>Tempo limite de execução: <i class="fa-solid fa-stopwatch"></i> ${challenge.timeLimitSec}s</span> <span>Memória limite: <i class="fa-solid fa-microchip"></i> ${challenge.memoryLimitMB}MB</span>`;
-    problemDescription.innerText = challenge.description || '';
 
-    let samplesHtml = '<h4><i class="fa-solid fa-thumbtack"></i> Exemplos:</h4>';
+    problemMeta.innerHTML = `
+        <span>Tempo limite: <i class="fa-solid fa-stopwatch"></i> ${challenge.timeLimitSec}s</span>
+        <span>Memória limite: <i class="fa-solid fa-microchip"></i> ${challenge.memoryLimitMB}MB</span>
+    `;
+
+    let html = `<div class="problem-description">${challenge.description || ''}</div>`;
+
+    if (challenge.inputFormat) {
+        html += `
+            <div class="problem-section">
+                <h4><i class="fa-solid fa-keyboard"></i> Formato de Entrada</h4>
+                <pre>${challenge.inputFormat}</pre>
+            </div>`;
+    }
+
+    if (challenge.outputFormat) {
+        html += `
+            <div class="problem-section">
+                <h4><i class="fa-solid fa-print"></i> Formato de Saída</h4>
+                <pre>${challenge.outputFormat}</pre>
+            </div>`;
+    }
+
+    if (challenge.constraints) {
+        html += `
+            <div class="problem-section">
+                <h4><i class="fa-solid fa-ban"></i> Restrições</h4>
+                <pre>${challenge.constraints}</pre>
+            </div>`;
+    }
+
     if (challenge.samples && challenge.samples.length) {
+        html += '<h4><i class="fa-solid fa-thumbtack"></i> Exemplos:</h4>';
         challenge.samples.forEach((s, idx) => {
-            samplesHtml += `<pre><strong>Entrada ${idx + 1}:</strong>\n${s.input}\n<strong>Saída:</strong>\n${s.output}</pre>`;
+            html += `<pre><strong>Entrada ${idx + 1}:</strong>\n${s.input}\n<strong>Saída:</strong>\n${s.output}</pre>`;
         });
     }
-    problemSamples.innerHTML = samplesHtml;
+
+    problemDescription.innerHTML = html;
+
+    const practiceInfo = document.getElementById('practiceInfo');
+    if (practiceInfo) practiceInfo.style.display = 'none';
 }
 
 function showChallengesView() {

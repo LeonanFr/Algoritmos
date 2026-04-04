@@ -778,3 +778,59 @@ body {
 .toast-notification.show {
     opacity: 1;
 }
+
+.problem-section {
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.problem-section h4 {
+    font-size: 0.85rem;
+    color: var(--neon-purple);
+    margin-bottom: 0.6rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 700;
+}
+
+.problem-section pre {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(176, 38, 255, 0.2);
+    border-radius: 4px;
+    padding: 12px;
+    font-size: 0.85rem;
+
+    white-space: pre-wrap;
+    word-break: normal;
+    overflow-wrap: break-word;
+
+    font-family: 'Fira Code', monospace;
+    color: var(--text-main);
+    line-height: 1.6;
+}
+
+#problemDescription h4 {
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--neon-green);
+}
+
+#problemDescription pre {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border-color);
+    padding: 12px;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+
+    white-space: pre-wrap;
+    word-break: normal;
+    overflow-wrap: break-word;
+
+    font-family: 'Fira Code', monospace;
+    font-size: 0.85rem;
+    line-height: 1.6;
+}
