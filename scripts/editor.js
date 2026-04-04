@@ -141,9 +141,11 @@ function showWaitingScreen() {
 }
 
 function enableChallengeMode() {
-    if (editor) editor.updateOptions({ readOnly: false });
-    testBtn.disabled = false;
-    submitBtn.disabled = false;
+    if (editor && !handoverActive && tournamentStarted && !teamCompleted && !tournamentEnded) {
+        editor.updateOptions({ readOnly: false });
+    }
+    if (!handoverActive && !cooldownTimers.test && tournamentStarted && !teamCompleted && !tournamentEnded) testBtn.disabled = false;
+    if (!handoverActive && !cooldownTimers.submit && tournamentStarted && !teamCompleted && !tournamentEnded) submitBtn.disabled = false;
 }
 
 async function fetchTournamentStatus() {
@@ -254,7 +256,7 @@ function startTournamentCountdown(endTimeISO) {
         }
     };
     updateTimer();
-    globalTimerInterval = setInterval(updateTimer, 1000);
+    globalTimerInterval = setInterval(updateTimer, 250);
 }
 
 function renderChallenge(challenge) {
@@ -341,25 +343,37 @@ function startCooldown(type, seconds) {
     const btn = type === 'test' ? testBtn : submitBtn;
     const icon = type === 'test' ? 'vial' : 'upload';
 
-    if (cooldownTimers[type]) clearInterval(cooldownTimers[type]);
+    if (cooldownTimers[type]) {
+        clearInterval(cooldownTimers[type]);
+        cooldownTimers[type] = null;
+    }
 
     btn.disabled = true;
     setLED('cooldown');
+
     let remaining = seconds;
+
+    btn.innerHTML = `<i class="fa-solid fa-${icon}"></i> ${type === 'test' ? 'Testar' : 'Enviar'} (${remaining}s)`;
 
     const interval = setInterval(() => {
         remaining--;
-        btn.innerHTML = `<i class="fa-solid fa-${icon}"></i> ${type === 'test' ? 'Testar' : 'Enviar'} (${remaining}s)`;
 
-        if (remaining <= 0) {
-            clearInterval(interval);
+        if (remaining > 0) {
+            btn.innerHTML = `<i class="fa-solid fa-${icon}"></i> ${type === 'test' ? 'Testar' : 'Enviar'} (${remaining}s)`;
+        } else {
+            clearInterval(cooldownTimers[type]);
             cooldownTimers[type] = null;
+
             btn.innerHTML = `<i class="fa-solid fa-${icon}"></i> ${type === 'test' ? 'Testar' : 'Enviar'}`;
 
             if (!handoverActive && tournamentStarted && !tournamentEnded && !teamCompleted) {
                 btn.disabled = false;
             }
-            setLED('idle');
+
+            const otherType = type === 'test' ? 'submit' : 'test';
+            if (!cooldownTimers[otherType]) {
+                setLED('idle');
+            }
         }
     }, 1000);
 
@@ -367,10 +381,11 @@ function startCooldown(type, seconds) {
 }
 
 async function handleSubmission(type) {
-    if (!tournamentStarted) {
-        showConsole('<i class="fa-solid fa-hourglass-half"></i> Aguarde o início do torneio.', true);
-        return;
-    }
+    if (!tournamentStarted || handoverActive || tournamentEnded || teamCompleted) return;
+
+    const btn = type === 'test' ? testBtn : submitBtn;
+    if (btn.disabled) return;
+
     if (!tournament || !team || !currentChallenge) {
         showConsole('<i class="fa-solid fa-exclamation-triangle"></i> Dados não encontrados.', true);
         return;
@@ -384,7 +399,10 @@ async function handleSubmission(type) {
         showConsole('<i class="fa-solid fa-keyboard"></i> Digite o código antes de enviar.', true);
         return;
     }
+
+    btn.disabled = true;
     showLoading(true);
+
     try {
         const result = await submitCode({
             tournamentId: tournament.id,
@@ -394,7 +412,7 @@ async function handleSubmission(type) {
             language: languageSelect.value,
             code: code
         });
-        showLoading(false);
+
         if (type === 'test') {
             let output = `<strong>Veredito: ${result.verdict.toUpperCase()}</strong><br>`;
             if (result.testCases && result.testCases.length) {
@@ -421,18 +439,23 @@ async function handleSubmission(type) {
                 showConsole(`<i class="fa-solid fa-circle-xmark"></i> ${result.message || 'Falha na submissão final'}`, true);
             }
         }
+
         const status = await fetchTeamStatus();
         if (status && status.cooldown) {
             if (status.cooldown.test > 0) startCooldown('test', status.cooldown.test);
             if (status.cooldown.submit > 0) startCooldown('submit', status.cooldown.submit);
         }
     } catch (err) {
-        showLoading(false);
         if (err.cooldown) {
             startCooldown(type, err.remaining);
             showConsole(`<i class="fa-solid fa-hourglass-half"></i> Cooldown: aguarde ${err.remaining} segundos.`, true);
         } else {
             showConsole(`<i class="fa-solid fa-bug"></i> Erro: ${err.message}`, true);
+        }
+    } finally {
+        showLoading(false);
+        if (!cooldownTimers[type] && !handoverActive && tournamentStarted && !tournamentEnded && !teamCompleted) {
+            btn.disabled = false;
         }
     }
 }
