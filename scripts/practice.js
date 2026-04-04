@@ -163,11 +163,16 @@ function renderChallenge(challenge) {
     const practiceInfo = document.getElementById('practiceInfo');
     if (practiceInfo) practiceInfo.style.display = 'none';
 }
-
 function showChallengesView() {
     challengesView.classList.add('active');
     editorView.classList.remove('active');
     exitChallengeBtn.style.display = 'none';
+
+    const practiceInfo = document.getElementById('practiceInfo');
+    if (practiceInfo) {
+        practiceInfo.style.display = 'block';
+    }
+
     if (editor) {
         editor.setValue('');
         editor.updateOptions({ readOnly: true });
