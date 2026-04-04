@@ -6,13 +6,6 @@ let challenges = [];
 let editor = null;
 let cooldownTimers = { test: null, submit: null };
 
-// Elementos das views
-const challengesView = document.getElementById('challengesView');
-const editorView = document.getElementById('editorView');
-const exitChallengeBtn = document.getElementById('exitChallengeBtn');
-const challengeListContainer = document.getElementById('challengeList');
-
-// Elementos do editor (mesmo de antes)
 const ledRed = document.getElementById('ledRed');
 const ledAmber = document.getElementById('ledAmber');
 const ledGreen = document.getElementById('ledGreen');
@@ -25,6 +18,11 @@ const problemMeta = document.getElementById('problemMeta');
 const problemDescription = document.getElementById('problemDescription');
 const problemSamples = document.getElementById('problemSamples');
 
+const challengesView = document.getElementById('challengesView');
+const editorView = document.getElementById('editorView');
+const exitChallengeBtn = document.getElementById('exitChallengeBtn');
+const challengeListContainer = document.getElementById('challengeList');
+
 function setLED(state) {
     ledRed.classList.remove('active');
     ledAmber.classList.remove('active');
@@ -35,7 +33,9 @@ function setLED(state) {
 }
 
 function showConsole(msg, isError = false) {
-    outputConsole.innerHTML = `<div style="color: ${isError ? '#ff5f57' : 'var(--neon-green)'}">${msg}</div>`;
+    outputConsole.innerHTML = msg;
+    if (isError) outputConsole.style.color = '#ff5f57';
+    else outputConsole.style.color = 'var(--neon-green)';
 }
 
 function showLoading(show) {
@@ -205,30 +205,61 @@ async function handleSubmission(type) {
             type: type
         });
         showLoading(false);
+
         if (type === 'test') {
-            let output = `<strong>Veredito: ${result.verdict.toUpperCase()}</strong><br>`;
+            let output = `<div class="console-verdict verdict-${result.verdict.toLowerCase()}">
+                            <strong>VEREDITO: ${result.verdict.toUpperCase()}</strong>
+                          </div>`;
+
             if (result.testCases && result.testCases.length) {
                 result.testCases.forEach((tc, i) => {
-                    const iconPass = tc.passed ? '<i class="fa-solid fa-check-circle" style="color: var(--neon-green)"></i>' : '<i class="fa-solid fa-circle-xmark" style="color: #ff5f57"></i>';
-                    output += `<hr><b>Caso ${i + 1}</b> ${iconPass}<br>`;
-                    output += `<i class="fa-solid fa-inbox"></i> Input: ${tc.input}<br><i class="fa-solid fa-upload"></i> Esperado: ${tc.expected}<br><i class="fa-solid fa-laptop-code"></i> Recebido: ${tc.output}<br>`;
+                    const statusClass = tc.passed ? 'case-passed' : 'case-failed';
+                    const statusIcon = tc.passed ? 'fa-check-circle' : 'fa-circle-xmark';
+
+                    output += `
+                        <div class="test-case-box ${statusClass}">
+                            <div class="test-case-header">
+                                <span><i class="fa-solid fa-flask"></i> Caso ${i + 1}</span>
+                                <i class="fa-solid ${statusIcon}"></i>
+                            </div>
+                            <div class="test-case-data">
+                                <div class="data-line">
+                                    <span class="label">INPUT:</span>
+                                    <span class="value">${tc.input}</span>
+                                </div>
+                                <div class="data-line">
+                                    <span class="label">EXPECTED:</span>
+                                    <span class="value">${tc.expected}</span>
+                                </div>
+                                <div class="data-line">
+                                    <span class="label">OUTPUT:</span>
+                                    <span class="value">${tc.output}</span>
+                                </div>
+                            </div>
+                        </div>`;
                 });
             } else if (result.message) {
-                output += result.message;
+                output += `<div class="console-message">${result.message}</div>`;
             }
-            showConsole(output, result.verdict !== 'accepted');
+            showConsole(output);
         } else {
             if (result.verdict === 'accepted') {
-                showConsole('<i class="fa-solid fa-trophy"></i> PARABÉNS! SOLUÇÃO ACEITA!');
+                showConsole('<div class="console-success"><i class="fa-solid fa-trophy"></i> PARABÉNS! SOLUÇÃO ACEITA!</div>');
                 setLED('completed');
                 setTimeout(() => setLED('idle'), 2000);
             } else {
-                showConsole(`<i class="fa-solid fa-circle-xmark"></i> ${result.message || 'Falha na submissão'}`, true);
+                showConsole(`<div class="test-case-box case-failed">
+                                <div class="test-case-header">
+                                    <span>SUBMISSÃO FINAL</span>
+                                    <i class="fa-solid fa-circle-xmark"></i>
+                                </div>
+                                <div class="console-message" style="padding: 10px">${result.message || 'Falha na submissão'}</div>
+                             </div>`, true);
             }
         }
     } catch (err) {
         showLoading(false);
-        showConsole(`<i class="fa-solid fa-bug"></i> Erro: ${err.message}`, true);
+        showConsole(`<div class="console-error"><i class="fa-solid fa-bug"></i> Erro: ${err.message}</div>`, true);
     }
 }
 
