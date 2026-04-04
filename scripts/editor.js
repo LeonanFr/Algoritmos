@@ -41,6 +41,23 @@ const handoverSecondsSpan = document.getElementById('handoverSeconds');
 
 let handoverRAF = null;
 
+function showToast(message, isError = false) {
+    let toast = document.querySelector('.toast-notification');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.className = 'toast-notification';
+        document.body.appendChild(toast);
+    }
+    toast.innerHTML = message;
+    toast.classList.add('show');
+    if (isError) toast.style.background = 'rgba(255, 95, 87, 0.9)';
+    else toast.style.background = 'rgba(0, 255, 102, 0.9)';
+    setTimeout(() => {
+        toast.classList.remove('show');
+        toast.style.background = '';
+    }, 2000);
+}
+
 function showHandover(durationSeconds) {
     if (handoverRAF) cancelAnimationFrame(handoverRAF);
 
@@ -142,8 +159,9 @@ function setLED(state) {
     else if (state === 'completed') ledGreen.classList.add('active');
 }
 
-function showConsole(msg, isError = false) {
-    outputConsole.innerHTML = `<div style="color: ${isError ? '#ff5f57' : 'var(--neon-green)'}">${msg}</div>`;
+function showConsole(msg) {
+    outputConsole.innerHTML = msg;
+    outputConsole.style.color = '';
 }
 
 function showLoading(show) {
@@ -245,7 +263,8 @@ function connectWebSocket() {
             if (data.event === 'TOURNAMENT_START' && !tournamentStarted) {
                 tournamentStarted = true;
                 startTournamentCountdown(data.endTime);
-                startRotationCycle(data.startTime, data.endTime, data.config.playerMinutes, data.config.handoverSeconds, data.config.finalExtraMin); loadChallenges();
+                startRotationCycle(data.startTime, data.endTime, data.config.playerMinutes, data.config.handoverSeconds, data.config.finalExtraMin);
+                loadChallenges();
                 enableChallengeMode();
             }
         } catch (e) {
@@ -448,7 +467,8 @@ async function handleSubmission(type) {
         });
 
         if (type === 'test') {
-            let output = `<div class="console-verdict verdict-${result.verdict.toLowerCase()}">
+            let verdictClass = result.verdict.toLowerCase().replace('_', '-');
+            let output = `<div class="console-verdict verdict-${verdictClass}">
                             <strong>VEREDITO: ${result.verdict.toUpperCase()}</strong>
                           </div>`;
 
@@ -494,13 +514,14 @@ async function handleSubmission(type) {
                 if (socket) socket.close();
                 if (globalTimerInterval) clearInterval(globalTimerInterval);
             } else {
+                const errorMsg = result.message || 'Falha na submissão final';
                 showConsole(`<div class="test-case-box case-failed">
                                 <div class="test-case-header">
                                     <span>SUBMISSÃO FINAL</span>
                                     <i class="fa-solid fa-circle-xmark"></i>
                                 </div>
-                                <div class="console-message" style="padding: 10px">${result.message || 'Falha na submissão final'}</div>
-                             </div>`, true);
+                                <div class="console-message" style="padding: 10px">${errorMsg}</div>
+                             </div>`);
             }
         }
 
@@ -512,9 +533,9 @@ async function handleSubmission(type) {
     } catch (err) {
         if (err.cooldown) {
             startCooldown(type, err.remaining);
-            showConsole(`<div class="console-cooldown"><i class="fa-solid fa-hourglass-half"></i> Cooldown: aguarde ${err.remaining} segundos.</div>`, true);
+            showConsole(`<div class="console-cooldown"><i class="fa-solid fa-hourglass-half"></i> Cooldown: aguarde ${err.remaining} segundos.</div>`);
         } else {
-            showConsole(`<div class="console-error"><i class="fa-solid fa-bug"></i> Erro: ${err.message}</div>`, true);
+            showConsole(`<div class="console-error"><i class="fa-solid fa-bug"></i> Erro: ${err.message}</div>`);
         }
     } finally {
         showLoading(false);
@@ -558,10 +579,10 @@ async function performSave() {
     lastSavedLanguage = currentLang;
     try {
         await saveCodeToBackend(currentCode, currentLang);
-        showConsole('<i class="fa-solid fa-check-circle"></i> Código salvo.');
+        showToast('<i class="fa-solid fa-check-circle"></i> Código salvo.');
     } catch (err) {
         console.error('Erro ao salvar:', err);
-        showConsole('<i class="fa-solid fa-exclamation-triangle"></i> Falha ao salvar código.', true);
+        showToast('<i class="fa-solid fa-exclamation-triangle"></i> Falha ao salvar código.', true);
     }
 }
 

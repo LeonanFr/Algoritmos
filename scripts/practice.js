@@ -25,6 +25,20 @@ const challengeListContainer = document.getElementById('challengeList');
 
 let completedChallenges = new Set();
 
+function showToast(message) {
+    let toast = document.querySelector('.toast-notification');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.className = 'toast-notification';
+        document.body.appendChild(toast);
+    }
+    toast.innerHTML = message;
+    toast.classList.add('show');
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 2000);
+}
+
 function loadProgress() {
     const saved = localStorage.getItem('practiceProgress');
     if (saved) {
@@ -287,7 +301,7 @@ async function handleSubmission(type) {
                 output += `<div class="console-message">${result.message}</div>`;
             }
             showConsole(output);
-        } else {
+        } else { // submit
             if (result.verdict === 'accepted') {
                 markChallengeCompleted(currentChallenge.id);
                 showConsole('<div class="console-success"><i class="fa-solid fa-trophy"></i> PARABÉNS! SOLUÇÃO ACEITA!</div>');
@@ -305,6 +319,16 @@ async function handleSubmission(type) {
                 } else {
                     showCompletionOverlay();
                 }
+            } else {
+                // Exibe a mensagem de erro (wrong_answer, compilation_error, etc.)
+                const errorMsg = result.message || 'Falha na submissão';
+                showConsole(`<div class="test-case-box case-failed">
+                                <div class="test-case-header">
+                                    <span>SUBMISSÃO FINAL</span>
+                                    <i class="fa-solid fa-circle-xmark"></i>
+                                </div>
+                                <div class="console-message" style="padding: 10px">${errorMsg}</div>
+                             </div>`, true);
             }
         }
     } catch (err) {
@@ -359,7 +383,7 @@ function performPracticeSave() {
     const currentLang = languageSelect.value;
     if (currentCode === lastSavedCode && currentLang === lastSavedLanguage) return;
     savePracticeCodeLocally(currentCode, currentLang);
-    showConsole('<i class="fa-solid fa-check-circle"></i> Código salvo localmente.');
+    showToast('<i class="fa-solid fa-check-circle"></i> Código salvo localmente.');
 }
 
 function debouncedPracticeAutoSave() {
