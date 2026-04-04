@@ -175,7 +175,7 @@ function renderChallengeList() {
                 currentChallenge = challenge;
                 renderChallenge(challenge);
                 showEditorView();
-                if (editor) editor.setValue('');
+                loadSavedPracticeCode();
             }
         });
     });
@@ -212,6 +212,10 @@ function initMonaco() {
         insertSpaces: true,
         scrollBeyondLastLine: false,
         readOnly: true
+    });
+
+    editor.onDidChangeModelContent(() => {
+        debouncedPracticeAutoSave();
     });
 
     languageSelect.addEventListener('change', () => {
@@ -327,6 +331,58 @@ function showCompletionOverlay() {
     });
 }
 
+let saveTimeout = null;
+let lastSavedCode = '';
+let lastSavedLanguage = '';
+
+function savePracticeCodeLocally(code, language) {
+    const key = `practice_code_${currentChallenge.id}`;
+    localStorage.setItem(key, JSON.stringify({ code, language }));
+    lastSavedCode = code;
+    lastSavedLanguage = language;
+}
+
+function loadPracticeCodeLocally() {
+    const key = `practice_code_${currentChallenge.id}`;
+    const saved = localStorage.getItem(key);
+    if (saved) {
+        try {
+            return JSON.parse(saved);
+        } catch (e) { return null; }
+    }
+    return null;
+}
+
+function performPracticeSave() {
+    if (!editor || !currentChallenge) return;
+    const currentCode = editor.getValue();
+    const currentLang = languageSelect.value;
+    if (currentCode === lastSavedCode && currentLang === lastSavedLanguage) return;
+    savePracticeCodeLocally(currentCode, currentLang);
+    showConsole('<i class="fa-solid fa-check-circle"></i> Código salvo localmente.');
+}
+
+function debouncedPracticeAutoSave() {
+    if (saveTimeout) clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(() => {
+        performPracticeSave();
+    }, 3000);
+}
+
+function loadSavedPracticeCode() {
+    const saved = loadPracticeCodeLocally();
+    if (saved && saved.code && editor) {
+        editor.setValue(saved.code);
+        if (saved.language && languageSelect.value !== saved.language) {
+            languageSelect.value = saved.language;
+            languageSelect.dispatchEvent(new Event('change'));
+        }
+        lastSavedCode = saved.code;
+        lastSavedLanguage = saved.language;
+        showConsole('<i class="fa-solid fa-download"></i> Código restaurado localmente.');
+    }
+}
+
 testBtn.addEventListener('click', () => handleSubmission('test'));
 submitBtn.addEventListener('click', () => handleSubmission('submit'));
 exitChallengeBtn.addEventListener('click', () => showChallengesView());
@@ -335,6 +391,13 @@ window.addEventListener('load', async () => {
     require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' } });
     require(['vs/editor/editor.main'], function () {
         initMonaco();
+        const saveBtn = document.getElementById('saveCodeBtn');
+        if (saveBtn) {
+            saveBtn.addEventListener('click', () => {
+                if (saveTimeout) clearTimeout(saveTimeout);
+                performPracticeSave();
+            });
+        }
         loadChallenges();
     });
 });

@@ -308,6 +308,8 @@ async function loadChallenges() {
         currentChallenge = challenges[0];
         renderChallenge(currentChallenge);
 
+        await loadSavedCodeForChallenge();
+
         const status = await fetchTeamStatus();
         if (status && status.completed) {
             teamCompleted = true;
@@ -357,6 +359,10 @@ function initMonaco() {
         insertSpaces: true,
         scrollBeyondLastLine: false,
         readOnly: true
+    });
+
+    editor.onDidChangeModelContent(() => {
+        debouncedAutoSave();
     });
 
     languageSelect.addEventListener('change', () => {
@@ -518,6 +524,78 @@ async function handleSubmission(type) {
     }
 }
 
+let saveTimeout = null;
+let lastSavedCode = '';
+let lastSavedLanguage = '';
+
+async function saveCodeToBackend(code, language) {
+    const url = `${ORCHESTRATOR_URL}/api/code/save`;
+    const payload = {
+        tournamentId: tournament.id,
+        teamCode: team.code,
+        challengeId: currentChallenge.id,
+        language: language,
+        code: code
+    };
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${API_TOKEN}`
+        },
+        body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error(await res.text());
+    console.log('Código salvo no servidor');
+}
+
+async function performSave() {
+    if (!editor || !currentChallenge) return;
+    const currentCode = editor.getValue();
+    const currentLang = languageSelect.value;
+    if (currentCode === lastSavedCode && currentLang === lastSavedLanguage) return;
+    lastSavedCode = currentCode;
+    lastSavedLanguage = currentLang;
+    try {
+        await saveCodeToBackend(currentCode, currentLang);
+        showConsole('<i class="fa-solid fa-check-circle"></i> Código salvo.');
+    } catch (err) {
+        console.error('Erro ao salvar:', err);
+        showConsole('<i class="fa-solid fa-exclamation-triangle"></i> Falha ao salvar código.', true);
+    }
+}
+
+function debouncedAutoSave() {
+    if (saveTimeout) clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(() => {
+        performSave();
+    }, 3000);
+}
+
+async function loadSavedCodeForChallenge() {
+    const url = `${ORCHESTRATOR_URL}/api/code/load?tournamentId=${tournament.id}&teamCode=${team.code}&challengeId=${currentChallenge.id}`;
+    try {
+        const res = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${API_TOKEN}` }
+        });
+        if (res.status === 404) return;
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        if (data && data.code && editor) {
+            editor.setValue(data.code);
+            if (data.language && languageSelect.value !== data.language) {
+                languageSelect.value = data.language;
+                languageSelect.dispatchEvent(new Event('change'));
+            }
+            lastSavedCode = data.code;
+            lastSavedLanguage = data.language;
+            showConsole('<i class="fa-solid fa-download"></i> Código restaurado.');
+        }
+    } catch (err) {
+        console.error('Erro ao carregar código:', err);
+    }
+}
+
 testBtn.addEventListener('click', () => handleSubmission('test'));
 submitBtn.addEventListener('click', () => handleSubmission('submit'));
 
@@ -531,6 +609,13 @@ window.addEventListener('load', async () => {
 
     require(['vs/editor/editor.main'], function () {
         initMonaco();
+        const saveBtn = document.getElementById('saveCodeBtn');
+        if (saveBtn) {
+            saveBtn.addEventListener('click', () => {
+                if (saveTimeout) clearTimeout(saveTimeout);
+                performSave();
+            });
+        }
         showWaitingScreen();
 
         (async () => {
