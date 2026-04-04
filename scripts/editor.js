@@ -39,7 +39,11 @@ const handoverOverlay = document.getElementById('handoverOverlay');
 const handoverFill = document.getElementById('handoverFill');
 const handoverSecondsSpan = document.getElementById('handoverSeconds');
 
+let handoverRAF = null;
+
 function showHandover(durationSeconds) {
+    if (handoverRAF) cancelAnimationFrame(handoverRAF);
+
     handoverDuration = durationSeconds;
     handoverStartTime = performance.now();
     handoverActive = true;
@@ -57,23 +61,25 @@ function showHandover(durationSeconds) {
         const seconds = Math.ceil(remaining);
 
         handoverSecondsSpan.textContent = seconds.toString().padStart(2, '0');
-
         const progress = Math.min(1, elapsed / handoverDuration);
         handoverFill.style.height = (100 - (progress * 100)) + '%';
 
         if (remaining <= 0) {
             hideHandover();
         } else {
-            requestAnimationFrame(updateHandover);
+            handoverRAF = requestAnimationFrame(updateHandover);
         }
     }
-
-    requestAnimationFrame(updateHandover);
+    handoverRAF = requestAnimationFrame(updateHandover);
 }
 
 function hideHandover() {
     handoverActive = false;
     handoverOverlay.style.display = 'none';
+    if (handoverRAF) {
+        cancelAnimationFrame(handoverRAF);
+        handoverRAF = null;
+    }
 
     if (!cooldownTimers.test && tournamentStarted && !teamCompleted && !tournamentEnded) testBtn.disabled = false;
     if (!cooldownTimers.submit && tournamentStarted && !teamCompleted && !tournamentEnded) submitBtn.disabled = false;
@@ -82,41 +88,49 @@ function hideHandover() {
     if (handoverInterval) clearInterval(handoverInterval);
 }
 
+let rotationRAF = null;
+
 function startRotationCycle(startTimeISO, endTimeISO, playerMin, handoverSec, finalExtraMin) {
+    if (rotationRAF) cancelAnimationFrame(rotationRAF);
+
     const start = new Date(startTimeISO).getTime();
     const end = new Date(endTimeISO).getTime();
-    playerDuration = playerMin * 60;
-    handoverSecondsConfig = handoverSec;
-    const finalExtraSeconds = (finalExtraMin || 0) * 60;
-    totalCycle = playerDuration + handoverSec;
-    cycleStartTime = start;
+    const playerDurationMs = playerMin * 60 * 1000;
+    const handoverMs = handoverSec * 1000;
+    const totalCycleMs = playerDurationMs + handoverMs;
+    const finalExtraMs = (finalExtraMin || 0) * 60 * 1000;
 
     function checkRotation() {
-        if (tournamentEnded || teamCompleted) return;
-
-        const now = Date.now();
-        const remainingGlobalSeconds = (end - now) / 1000;
-
-        if (remainingGlobalSeconds <= finalExtraSeconds) {
+        if (tournamentEnded || teamCompleted) {
             if (handoverActive) hideHandover();
-            requestAnimationFrame(checkRotation);
             return;
         }
 
-        const elapsed = (now - cycleStartTime) / 1000;
-        const cyclePosition = elapsed % totalCycle;
+        const now = Date.now();
+        const remainingGlobal = end - now;
 
-        if (cyclePosition < playerDuration) {
+        if (remainingGlobal <= finalExtraMs) {
+            if (handoverActive) hideHandover();
+            rotationRAF = requestAnimationFrame(checkRotation);
+            return;
+        }
+
+        const elapsed = now - start;
+        const cyclePosition = elapsed % totalCycleMs;
+
+        if (cyclePosition < playerDurationMs) {
             if (handoverActive) hideHandover();
         } else {
-            const handoverRemaining = handoverSecondsConfig - (cyclePosition - playerDuration);
-            if (!handoverActive && handoverRemaining > 0 && handoverRemaining <= handoverSecondsConfig) {
-                showHandover(handoverSecondsConfig);
+            if (!handoverActive) {
+                const remainingInWindow = (handoverMs - (cyclePosition - playerDurationMs)) / 1000;
+                if (remainingInWindow > 0) {
+                    showHandover(remainingInWindow);
+                }
             }
         }
-        requestAnimationFrame(checkRotation);
+        rotationRAF = requestAnimationFrame(checkRotation);
     }
-    requestAnimationFrame(checkRotation);
+    rotationRAF = requestAnimationFrame(checkRotation);
 }
 
 function setLED(state) {
@@ -245,8 +259,11 @@ function connectWebSocket() {
 }
 
 function startTournamentCountdown(endTimeISO) {
+    if (globalTimerInterval) {
+        clearInterval(globalTimerInterval);
+        globalTimerInterval = null;
+    }
     const end = new Date(endTimeISO);
-    if (globalTimerInterval) clearInterval(globalTimerInterval);
     const updateTimer = () => {
         const now = new Date();
         const diff = Math.max(0, end - now);
@@ -254,8 +271,9 @@ function startTournamentCountdown(endTimeISO) {
         const seconds = Math.floor((diff % 60000) / 1000);
         const timerEl = document.getElementById('tournamentTimer');
         if (timerEl) timerEl.innerHTML = `<i class="fa-solid fa-clock"></i> ${minutes}:${seconds.toString().padStart(2, '0')}`;
-        if (diff <= 0) {
+        if (diff <= 0 && !tournamentEnded) {
             clearInterval(globalTimerInterval);
+            globalTimerInterval = null;
             tournamentEnded = true;
             if (handoverActive) hideHandover();
             showConsole('<i class="fa-solid fa-clock"></i> Tempo do torneio esgotado!', true);
