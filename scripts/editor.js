@@ -289,7 +289,7 @@ function startTournamentCountdown(endTimeISO) {
 function renderChallenge(challenge) {
     currentChallenge = challenge;
     problemTitle.innerText = challenge.title;
-    problemMeta.innerHTML = `<span><i class="fa-solid fa-stopwatch"></i> ${challenge.timeLimitSec}s</span> <span><i class="fa-solid fa-microchip"></i> ${challenge.memoryLimitMB}MB</span>`;
+    problemMeta.innerHTML = `<span>Tempo limite de execução: <i class="fa-solid fa-stopwatch"></i> ${challenge.timeLimitSec}s</span> <span>Memória limite: <i class="fa-solid fa-microchip"></i> ${challenge.memoryLimitMB}MB</span>`;
     problemDescription.innerText = challenge.description || '';
 
     let samplesHtml = '<h4><i class="fa-solid fa-thumbtack"></i> Exemplos:</h4>';

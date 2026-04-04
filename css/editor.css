@@ -156,12 +156,13 @@ body {
 
 .problem-meta {
     display: flex;
-    gap: 20px;
+    gap: 12px;
     margin-bottom: 20px;
     padding-bottom: 15px;
     border-bottom: 1px dashed var(--border-color);
     color: var(--neon-purple);
     font-size: 0.85rem;
+    flex-direction: column;
 }
 
 .problem-description {
@@ -424,4 +425,29 @@ body {
     mix-blend-mode: difference;
     z-index: 3;
     pointer-events: none;
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-header);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--neon-purple);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--neon-green);
+    box-shadow: 0 0 6px var(--neon-green);
+}
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--neon-purple) var(--bg-header);
 }

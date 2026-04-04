@@ -21,7 +21,7 @@ async function fetchTournaments() {
         const response = await fetch(`${ORCHESTRATOR_URL}/api/tournaments`, { headers });
         if (!response.ok) throw new Error('Falha ao carregar torneios');
         const data = await response.json();
-        tournaments = data.filter(t => t.status === 'pending' || t.status === 'waiting');
+        tournaments = data.filter(t => t.status === 'pending' || t.status === 'waiting' || t.status === 'active');
         renderTournaments();
     } catch (error) {
         tournamentGrid.innerHTML = `<div class="loading-placeholder"><i class="fas fa-times-circle"></i> Erro ao carregar torneios: ${error.message}</div>`;
@@ -36,16 +36,27 @@ function renderTournaments() {
         return;
     }
     tournamentCountSpan.textContent = tournaments.length;
-    tournamentGrid.innerHTML = tournaments.map(t => `
-        <div class="tournament-card" data-id="${t.id}">
-            <h3>${t.name}</h3>
-            <p>Duração: ${t.durationMinutes} minutos</p>
-            <div class="card-footer">
-                <span><i class="fas fa-trophy"></i> ${t.challengeIds?.length || 0} desafios</span>
-                <span>${t.status === 'pending' ? '<i class="fas fa-lock"></i> Aguardando início' : '<i class="fas fa-clipboard-list"></i> Inscrições abertas'}</span>
+    tournamentGrid.innerHTML = tournaments.map(t => {
+        let statusHtml = '';
+        if (t.status === 'active') {
+            statusHtml = '<span style="color: var(--neon-green)"><i class="fas fa-circle-play"></i> AO VIVO</span>';
+        } else if (t.status === 'pending') {
+            statusHtml = '<span><i class="fas fa-lock"></i> Aguardando início</span>';
+        } else {
+            statusHtml = '<span><i class="fas fa-clipboard-list"></i> Inscrições abertas</span>';
+        }
+
+        return `
+            <div class="tournament-card ${t.status === 'active' ? 'active-tournament' : ''}" data-id="${t.id}">
+                <h3>${t.name}</h3>
+                <p>Duração: ${t.durationMinutes} minutos</p>
+                <div class="card-footer">
+                    <span><i class="fas fa-trophy"></i> ${t.challengeIds?.length || 0} desafios</span>
+                    ${statusHtml}
+                </div>
             </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 
     document.querySelectorAll('.tournament-card').forEach(card => {
         card.addEventListener('click', () => {
