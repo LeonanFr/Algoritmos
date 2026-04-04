@@ -6,6 +6,13 @@ let challenges = [];
 let editor = null;
 let cooldownTimers = { test: null, submit: null };
 
+// Elementos das views
+const challengesView = document.getElementById('challengesView');
+const editorView = document.getElementById('editorView');
+const exitChallengeBtn = document.getElementById('exitChallengeBtn');
+const challengeListContainer = document.getElementById('challengeList');
+
+// Elementos do editor (mesmo de antes)
 const ledRed = document.getElementById('ledRed');
 const ledAmber = document.getElementById('ledAmber');
 const ledGreen = document.getElementById('ledGreen');
@@ -13,7 +20,10 @@ const testBtn = document.getElementById('testBtn');
 const submitBtn = document.getElementById('submitBtn');
 const outputConsole = document.getElementById('consoleContent');
 const languageSelect = document.getElementById('languageSelect');
-const challengeListPanel = document.getElementById('challengeListPanel');
+const problemTitle = document.getElementById('problemTitle');
+const problemMeta = document.getElementById('problemMeta');
+const problemDescription = document.getElementById('problemDescription');
+const problemSamples = document.getElementById('problemSamples');
 
 function setLED(state) {
     ledRed.classList.remove('active');
@@ -56,9 +66,9 @@ async function submitPracticeCode(payload) {
 
 function renderChallenge(challenge) {
     currentChallenge = challenge;
-    document.getElementById('problemTitle').innerText = challenge.title;
-    document.getElementById('problemMeta').innerHTML = `<span><i class="fa-solid fa-stopwatch"></i> ${challenge.timeLimitSec}s</span> <span><i class="fa-solid fa-microchip"></i> ${challenge.memoryLimitMB}MB</span>`;
-    document.getElementById('problemDescription').innerText = challenge.description || '';
+    problemTitle.innerText = challenge.title;
+    problemMeta.innerHTML = `<span>Tempo limite de execução: <i class="fa-solid fa-stopwatch"></i> ${challenge.timeLimitSec}s</span> <span>Memória limite: <i class="fa-solid fa-microchip"></i> ${challenge.memoryLimitMB}MB</span>`;
+    problemDescription.innerText = challenge.description || '';
 
     let samplesHtml = '<h4><i class="fa-solid fa-thumbtack"></i> Exemplos:</h4>';
     if (challenge.samples && challenge.samples.length) {
@@ -66,42 +76,65 @@ function renderChallenge(challenge) {
             samplesHtml += `<pre><strong>Entrada ${idx + 1}:</strong>\n${s.input}\n<strong>Saída:</strong>\n${s.output}</pre>`;
         });
     }
-    document.getElementById('problemSamples').innerHTML = samplesHtml;
+    problemSamples.innerHTML = samplesHtml;
+}
+
+function showChallengesView() {
+    challengesView.classList.add('active');
+    editorView.classList.remove('active');
+    exitChallengeBtn.style.display = 'none';
+    if (editor) {
+        editor.setValue('');
+        editor.updateOptions({ readOnly: true });
+    }
+    testBtn.disabled = true;
+    submitBtn.disabled = true;
+    setLED('idle');
+    showConsole('<i class="fa-solid fa-info-circle"></i> Selecione um desafio para começar.');
+}
+
+function showEditorView() {
+    challengesView.classList.remove('active');
+    editorView.classList.add('active');
+    exitChallengeBtn.style.display = 'flex';
+    if (editor) editor.updateOptions({ readOnly: false });
+    testBtn.disabled = false;
+    submitBtn.disabled = false;
 }
 
 async function loadChallenges() {
     try {
         challenges = await fetchPracticeChallenges();
         if (!challenges.length) throw new Error('Nenhum desafio disponível');
-        currentChallenge = challenges[0];
-        renderChallenge(currentChallenge);
         renderChallengeList();
+        showChallengesView();
     } catch (err) {
+        challengeListContainer.innerHTML = `<div class="loading-placeholder"><i class="fa-solid fa-circle-exclamation"></i> ${err.message}</div>`;
         showConsole(`<i class="fa-solid fa-bug"></i> Erro: ${err.message}`, true);
-        challengeListPanel.innerHTML = '<div class="loading-placeholder">Falha ao carregar desafios.</div>';
     }
 }
 
 function renderChallengeList() {
     if (!challenges.length) {
-        challengeListPanel.innerHTML = '<div class="loading-placeholder">Nenhum desafio encontrado.</div>';
+        challengeListContainer.innerHTML = '<div class="loading-placeholder">Nenhum desafio encontrado.</div>';
         return;
     }
-    challengeListPanel.innerHTML = challenges.map(c => `
-        <div class="challenge-list-item ${currentChallenge && currentChallenge.id === c.id ? 'active' : ''}" data-id="${c.id}">
-            <i class="fa-solid fa-code"></i>
-            <span>${c.title}</span>
+    challengeListContainer.innerHTML = challenges.map(c => `
+        <div class="challenge-card" data-id="${c.id}">
+            <h3><i class="fa-solid fa-code"></i> ${c.title}</h3>
+            <p>${c.description ? c.description.substring(0, 100) + '...' : 'Sem descrição'}</p>
+            <span class="difficulty"><i class="fa-solid fa-chart-line"></i> Treino livre</span>
         </div>
     `).join('');
 
-    document.querySelectorAll('.challenge-list-item').forEach(item => {
-        item.addEventListener('click', () => {
-            const id = item.dataset.id;
+    document.querySelectorAll('.challenge-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const id = card.dataset.id;
             const challenge = challenges.find(c => c.id === id);
             if (challenge) {
                 currentChallenge = challenge;
                 renderChallenge(challenge);
-                renderChallengeList();
+                showEditorView();
                 if (editor) editor.setValue('');
             }
         });
@@ -138,7 +171,7 @@ function initMonaco() {
         tabSize: 4,
         insertSpaces: true,
         scrollBeyondLastLine: false,
-        readOnly: false
+        readOnly: true
     });
 
     languageSelect.addEventListener('change', () => {
@@ -147,30 +180,6 @@ function initMonaco() {
     });
 
     window.addEventListener('resize', () => editor.layout());
-}
-
-function startCooldown(type, seconds) {
-    const btn = type === 'test' ? testBtn : submitBtn;
-    const icon = type === 'test' ? 'vial' : 'upload';
-    if (cooldownTimers[type]) clearInterval(cooldownTimers[type]);
-    btn.disabled = true;
-    setLED('cooldown');
-    let remaining = seconds;
-    btn.innerHTML = `<i class="fa-solid fa-${icon}"></i> ${type === 'test' ? 'Testar' : 'Enviar'} (${remaining}s)`;
-    const interval = setInterval(() => {
-        remaining--;
-        if (remaining > 0) {
-            btn.innerHTML = `<i class="fa-solid fa-${icon}"></i> ${type === 'test' ? 'Testar' : 'Enviar'} (${remaining}s)`;
-        } else {
-            clearInterval(interval);
-            cooldownTimers[type] = null;
-            btn.innerHTML = `<i class="fa-solid fa-${icon}"></i> ${type === 'test' ? 'Testar' : 'Enviar'}`;
-            btn.disabled = false;
-            const other = type === 'test' ? 'submit' : 'test';
-            if (!cooldownTimers[other]) setLED('idle');
-        }
-    }, 1000);
-    cooldownTimers[type] = interval;
 }
 
 async function handleSubmission(type) {
@@ -225,6 +234,7 @@ async function handleSubmission(type) {
 
 testBtn.addEventListener('click', () => handleSubmission('test'));
 submitBtn.addEventListener('click', () => handleSubmission('submit'));
+exitChallengeBtn.addEventListener('click', () => showChallengesView());
 
 window.addEventListener('load', async () => {
     require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' } });

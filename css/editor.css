@@ -598,3 +598,86 @@ body {
     justify-content: center;
     gap: 0.5rem;
 }
+
+.view {
+    display: none;
+    width: 100%;
+    height: calc(100vh - 60px);
+    overflow: hidden;
+}
+
+.view.active {
+    display: block;
+}
+
+.challenges-container {
+    max-width: 1000px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.challenges-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.challenges-header h2 {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 1.2rem;
+    color: var(--neon-green);
+    margin-bottom: 10px;
+}
+
+.challenge-list-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.challenge-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.challenge-card:hover {
+    border-color: var(--neon-purple);
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(176, 38, 255, 0.2);
+}
+
+.challenge-card h3 {
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+    color: #fff;
+}
+
+.challenge-card p {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.challenge-card .difficulty {
+    display: inline-block;
+    margin-top: 12px;
+    font-size: 0.7rem;
+    color: var(--neon-purple);
+}
+
+#exitChallengeBtn {
+    margin-left: auto;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+#exitChallengeBtn:hover {
+    border-color: var(--neon-green);
+    color: var(--neon-green);
+}

@@ -23,63 +23,83 @@
         <div class="timer-display">
             <span id="practiceInfo"><i class="fa-solid fa-infinity"></i> Treino Livre</span>
         </div>
+        <button id="exitChallengeBtn" class="btn-ghost" style="display: none;">
+            <i class="fa-solid fa-arrow-left"></i> Sair do Desafio
+        </button>
     </nav>
 
-    <div class="workspace">
-        <section class="panel challenge-list-panel">
-            <div class="terminal-bar panel-header">
-                <span class="dot red"></span>
-                <span class="dot yellow"></span>
-                <span class="dot green"></span>
-                <span class="term-title"><i class="fa-solid fa-list"></i> Desafios</span>
+    <div id="challengesView" class="view active">
+        <div class="challenges-container">
+            <div class="challenges-header">
+                <h2><i class="fa-solid fa-list"></i> Escolha um desafio</h2>
+                <p>Clique em qualquer card para iniciar o treino.</p>
             </div>
-            <div class="challenge-list-content" id="challengeListPanel">
+            <div id="challengeList" class="challenge-list-grid">
                 <div class="loading-placeholder">Carregando desafios...</div>
             </div>
-        </section>
+        </div>
+    </div>
 
-        <div class="right-panel">
-            <div class="editor-wrapper">
-                <div class="terminal-bar editor-header">
-                    <div class="lang-control">
-                        <i class="fa-solid fa-code"></i>
-                        <select id="languageSelect" class="language-select">
-                            <option value="c">C</option>
-                            <option value="cpp" selected>C++</option>
-                            <option value="java">Java</option>
-                            <option value="javascript">JavaScript</option>
-                            <option value="python">Python</option>
-                            <option value="kotlin">Kotlin</option>
-                        </select>
-                    </div>
-                    <div class="team-status">
-                        <span class="term-title">Status:</span>
-                        <div class="led-indicators">
-                            <div class="led red" id="ledRed"></div>
-                            <div class="led amber" id="ledAmber"></div>
-                            <div class="led green" id="ledGreen"></div>
+    <div id="editorView" class="view">
+        <div class="workspace">
+            <section class="panel problem-panel">
+                <div class="terminal-bar panel-header">
+                    <span class="dot red"></span>
+                    <span class="dot yellow"></span>
+                    <span class="dot green"></span>
+                    <span class="term-title"><i class="fa-solid fa-file-lines"></i> readme.md</span>
+                </div>
+                <div class="problem-content">
+                    <h1 id="problemTitle" class="main-title">Carregando desafio...</h1>
+                    <div class="problem-meta" id="problemMeta"></div>
+                    <div class="problem-description" id="problemDescription"></div>
+                    <div class="problem-samples" id="problemSamples"></div>
+                </div>
+            </section>
+
+            <div class="right-panel">
+                <div class="editor-wrapper">
+                    <div class="terminal-bar editor-header">
+                        <div class="lang-control">
+                            <i class="fa-solid fa-code"></i>
+                            <select id="languageSelect" class="language-select">
+                                <option value="c">C</option>
+                                <option value="cpp" selected>C++</option>
+                                <option value="java">Java</option>
+                                <option value="javascript">JavaScript</option>
+                                <option value="python">Python</option>
+                                <option value="kotlin">Kotlin</option>
+                            </select>
+                        </div>
+                        <div class="team-status">
+                            <span class="term-title">Status:</span>
+                            <div class="led-indicators">
+                                <div class="led red" id="ledRed"></div>
+                                <div class="led amber" id="ledAmber"></div>
+                                <div class="led green" id="ledGreen"></div>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="window-body">
-                    <div id="codeEditor" style="width: 100%; height: 100%;"></div>
-                </div>
-            </div>
-
-            <div class="console-wrapper">
-                <div class="terminal-bar console-header">
-                    <span class="term-title"><i class="fa-solid fa-terminal"></i> console_output</span>
-                    <div class="action-buttons">
-                        <button id="testBtn" class="btn-ghost">
-                            <i class="fa-solid fa-vial"></i> Testar
-                        </button>
-                        <button id="submitBtn" class="btn-neon">
-                            <i class="fa-solid fa-upload"></i> Enviar
-                        </button>
+                    <div class="window-body">
+                        <div id="codeEditor" style="width: 100%; height: 100%;"></div>
                     </div>
                 </div>
-                <div id="consoleContent" class="console-body">
-                    <i class="fa-solid fa-info-circle"></i> Modo prática – sem cooldown, sem limite de tentativas.
+
+                <div class="console-wrapper">
+                    <div class="terminal-bar console-header">
+                        <span class="term-title"><i class="fa-solid fa-terminal"></i> console_output</span>
+                        <div class="action-buttons">
+                            <button id="testBtn" class="btn-ghost">
+                                <i class="fa-solid fa-vial"></i> Testar
+                            </button>
+                            <button id="submitBtn" class="btn-neon">
+                                <i class="fa-solid fa-upload"></i> Enviar
+                            </button>
+                        </div>
+                    </div>
+                    <div id="consoleContent" class="console-body">
+                        <i class="fa-solid fa-info-circle"></i> Modo prática – sem cooldown, sem limite de tentativas.
+                    </div>
                 </div>
             </div>
         </div>
