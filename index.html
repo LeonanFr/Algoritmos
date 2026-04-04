@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Algoritmos em Revezamento | Copa de Software</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&family=Press+Start+2P&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" href="assets/algoritmo.png">
+</head>
+
+<body>
+
+    <div id="monster-background"></div>
+
+    <nav class="topbar">
+        <div class="brand">
+            <i class="fa-solid fa-terminal"></i>
+            <span>Arena_Revezamento</span>
+        </div>
+    </nav>
+
+    <main class="container">
+        <section class="panel terminal-hero hero">
+            <div class="panel-header">
+                <div class="window-controls">
+                    <span class="dot red"></span>
+                    <span class="dot yellow"></span>
+                    <span class="dot green"></span>
+                </div>
+                <span><i class="fa-solid fa-bolt"></i> init_system.sh</span>
+            </div>
+            <div class="panel-body text-center">
+                <h1 class="main-title">Escolha o Torneio</h1>
+                <p class="subtitle">Selecione uma competição, autentique sua equipe e inicie a prova.</p>
+            </div>
+        </section>
+
+        <section class="tournament-section">
+            <div class="section-header">
+                <h2><i class="fa-solid fa-network-wired"></i> Torneios Disponíveis</h2>
+                <span class="badge" id="tournamentCount">0</span>
+            </div>
+            <div class="tournament-grid" id="tournamentGrid">
+                <div class="loading-placeholder">
+                    <i class="fa-solid fa-circle-notch fa-spin"></i> Carregando torneios...
+                </div>
+            </div>
+        </section>
+
+        <section class="validation-section" id="validationSection" style="display: none;">
+            <div class="panel validation-card">
+                <div class="panel-header">
+                    <span><i class="fa-solid fa-shield-halved"></i> Autenticação Requerida</span>
+                </div>
+                <div class="panel-body">
+                    <div class="input-group">
+                        <input type="text" id="teamCodeInput" placeholder="Código da equipe (ex: XXX-XXXX)"
+                            autocomplete="off">
+                        <button id="validateBtn" class="btn-neon">
+                            <i class="fa-solid fa-key"></i> Autenticar
+                        </button>
+                    </div>
+                    <div id="validationError" class="error-message"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>I Copa de Software — Engenharia de Software UEPA Castanhal</p>
+    </footer>
+
+    <script src="scripts/script.js"></script>
+    <script>
+        fetch('assets/monster-anim.html')
+            .then(res => res.text())
+            .then(data => {
+                document.getElementById('monster-background').innerHTML = data;
+            });
+    </script>
+</body>
+
+</html>

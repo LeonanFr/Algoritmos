@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Arena de Algoritmos | Copa de Software</title>
+
+    <link rel="stylesheet" href="css/editor.css">
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&family=Press+Start+2P&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="icon" href="assets/algoritmo.png">
+</head>
+
+<body>
+
+    <nav class="topbar">
+        <div class="brand">
+            <i class="fa-solid fa-terminal"></i>
+            <span>Arena_Revezamento</span>
+        </div>
+        <div class="timer-display">
+            <span id="tournamentTimer"><i class="fa-regular fa-clock"></i> 00:00</span>
+        </div>
+    </nav>
+
+    <div class="workspace">
+
+        <section class="panel problem-panel">
+            <div class="terminal-bar panel-header">
+                <span class="dot red"></span>
+                <span class="dot yellow"></span>
+                <span class="dot green"></span>
+                <span class="term-title"><i class="fa-solid fa-file-lines"></i> readme.md</span>
+            </div>
+
+            <div class="problem-content">
+                <h1 id="problemTitle" class="main-title">Carregando desafio...</h1>
+                <div class="problem-meta" id="problemMeta"></div>
+                <div class="problem-description" id="problemDescription">
+                    <i class="fa-solid fa-circle-notch fa-spin"></i> Aguardando conexão...
+                </div>
+                <div class="problem-samples" id="problemSamples"></div>
+            </div>
+        </section>
+
+        <div class="right-panel">
+            <div class="editor-wrapper">
+                <div class="terminal-bar editor-header">
+                    <div class="lang-control">
+                        <i class="fa-solid fa-code"></i>
+                        <select id="languageSelect" class="language-select">
+                            <option value="c">C</option>
+                            <option value="cpp" selected>C++</option>
+                            <option value="java">Java</option>
+                            <option value="javascript">JavaScript</option>
+                            <option value="python">Python</option>
+                            <option value="kotlin">Kotlin</option>
+                        </select>
+                    </div>
+                    <div class="team-status">
+                        <span class="term-title">Status:</span>
+                        <div class="led-indicators">
+                            <div class="led red" id="ledRed"></div>
+                            <div class="led amber" id="ledAmber"></div>
+                            <div class="led green" id="ledGreen"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="window-body">
+                    <div id="codeEditor" style="width: 100%; height: 100%;"></div>
+                </div>
+            </div>
+
+            <div class="console-wrapper">
+                <div class="terminal-bar console-header">
+                    <span class="term-title"><i class="fa-solid fa-terminal"></i> console_output</span>
+                    <div class="action-buttons">
+                        <button id="testBtn" class="btn-ghost">
+                            <i class="fa-solid fa-vial"></i> Testar
+                        </button>
+                        <button id="submitBtn" class="btn-neon">
+                            <i class="fa-solid fa-upload"></i> Enviar
+                        </button>
+                    </div>
+                </div>
+                <div id="consoleContent" class="console-body">
+                    <i class="fa-solid fa-info-circle"></i> Sistema iniciado.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mobile-overlay">
+        <div>
+            <i class="fa-solid fa-desktop" style="font-size: 48px; margin-bottom: 20px;"></i>
+            <h2>Dispositivo não suportado</h2>
+            <p>Esta arena foi projetada para computadores.<br>Utilize um notebook ou desktop para competir.</p>
+        </div>
+    </div>
+
+    <div id="handoverOverlay" class="handover-overlay" style="display: none;">
+        <div class="handover-content">
+            <div class="handover-message">
+                <i class="fa-solid fa-people-arrows"></i>
+                <span>Próximo jogador</span>
+            </div>
+            <div class="handover-timer" id="handoverTimer">
+                <svg viewBox="0 0 100 100" class="handover-svg">
+                    <circle cx="50" cy="50" r="45" class="handover-bg" />
+                    <circle cx="50" cy="50" r="45" class="handover-fill" id="handoverFill" />
+                </svg>
+                <div class="handover-seconds" id="handoverSeconds">00</div>
+            </div>
+            <p class="handover-note">Preparando próximo turno...</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
+    <script src="scripts/editor.js"></script>
+</body>
+
+</html>

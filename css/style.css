@@ -1,0 +1,414 @@
+:root {
+    --bg-main: #05050a;
+    --bg-panel: #0f0f19;
+    --bg-header: #151522;
+    --neon-green: #00ff66;
+    --neon-purple: #b026ff;
+    --text-primary: #e0e0e0;
+    --text-muted: #8892b0;
+    --border-color: rgba(255, 255, 255, 0.08);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+*:focus {
+    outline: none;
+}
+
+body {
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    font-family: 'Fira Code', monospace;
+    line-height: 1.5;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    height: 60px;
+    background: var(--bg-header);
+    border-bottom: 1px solid var(--border-color);
+    position: relative;
+    z-index: 10;
+}
+
+.brand {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 0.8rem;
+    color: var(--neon-green);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    width: 100%;
+}
+
+.panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.panel-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: var(--bg-header);
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.window-controls {
+    display: flex;
+    gap: 6px;
+    margin-right: 10px;
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.dot.red {
+    background: #ff5f57;
+}
+
+.dot.yellow {
+    background: #febc2e;
+}
+
+.dot.green {
+    background: #28c840;
+}
+
+.panel-body {
+    padding: 30px;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.hero {
+    box-shadow: 0 0 30px rgba(0, 255, 102, 0.05);
+}
+
+.main-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--neon-green);
+    margin-bottom: 0.75rem;
+    text-shadow: 0 0 10px rgba(0, 255, 102, 0.3);
+}
+
+.subtitle {
+    color: var(--text-muted);
+    font-size: 1rem;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+}
+
+.section-header h2 {
+    font-size: 1.1rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.badge {
+    background: rgba(176, 38, 255, 0.1);
+    color: var(--neon-purple);
+    border: 1px solid rgba(176, 38, 255, 0.3);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.tournament-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+.tournament-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tournament-card:hover {
+    border-color: var(--neon-green);
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 255, 102, 0.1);
+}
+
+.tournament-card.selected {
+    border-color: var(--neon-green);
+    background: rgba(0, 255, 102, 0.05);
+    box-shadow: 0 0 0 1px var(--neon-green);
+}
+
+.tournament-card h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 0.5rem;
+}
+
+.tournament-card p {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+}
+
+.card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+    color: var(--neon-purple);
+}
+
+.validation-section {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.input-group {
+    display: flex;
+    gap: 10px;
+}
+
+.input-group input {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 12px 16px;
+    color: #ffffff;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.9rem;
+    transition: border-color 0.2s;
+}
+
+.input-group input:focus {
+    border-color: var(--neon-green);
+}
+
+.btn-neon {
+    background: rgba(0, 255, 102, 0.1);
+    color: var(--neon-green);
+    border: 1px solid var(--neon-green);
+    border-radius: 6px;
+    padding: 0 20px;
+    font-family: 'Fira Code', monospace;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-neon:hover {
+    background: var(--neon-green);
+    color: var(--bg-main);
+    box-shadow: 0 0 15px rgba(0, 255, 102, 0.4);
+}
+
+.btn-neon:active {
+    transform: scale(0.98);
+}
+
+.error-message {
+    color: #ff3c3c;
+    font-size: 0.85rem;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.loading-placeholder {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: var(--text-muted);
+    padding: 2rem;
+}
+
+footer {
+    text-align: center;
+    padding: 20px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-header);
+    position: relative;
+    z-index: 10;
+}
+
+#monster-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+    overflow: hidden;
+}
+
+#monster-dex {
+    width: 70%;
+    max-width: 600px;
+    margin: 0 0 0 auto;
+    opacity: 0.15;
+    animation: flutuar 6s ease-in-out infinite;
+}
+
+#rosto,
+#mao-r,
+#mao-l,
+#corpo {
+    fill: var(--neon-purple);
+    fill-opacity: 0.2;
+    animation: corpo 7s infinite;
+}
+
+#rosto {
+    fill: #ffffff;
+    fill-opacity: 1;
+    animation-name: rosto;
+}
+
+#mao-l {
+    animation: maoL 7s infinite, corpo 7s infinite;
+}
+
+#mao-r {
+    animation: maoR 7s infinite, corpo 7s infinite;
+}
+
+@keyframes corpo {
+
+    0%,
+    100% {
+        fill-opacity: 0;
+        stroke: var(--neon-green);
+    }
+
+    50% {
+        fill-opacity: 0.5;
+        stroke: var(--neon-purple);
+    }
+}
+
+@keyframes rosto {
+
+    0%,
+    50%,
+    100% {
+        fill-opacity: 0.8;
+    }
+}
+
+@keyframes flutuar {
+
+    0%,
+    100% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+
+    50% {
+        transform: translate(-15px, -20px) rotate(2deg);
+    }
+}
+
+@keyframes maoL {
+
+    0%,
+    100% {
+        transform: translate(0px, 0px);
+    }
+
+    25% {
+        transform: translate(0px, -40px);
+    }
+
+    50% {
+        transform: translate(35px, 30px);
+    }
+}
+
+@keyframes maoR {
+
+    0%,
+    100% {
+        transform: translate(0px, 0px);
+    }
+
+    50% {
+        transform: translate(-70px, 100px);
+    }
+}
+
+@media (max-width: 640px) {
+    .container {
+        padding: 20px 15px;
+    }
+
+    .main-title {
+        font-size: 1.5rem;
+    }
+
+    .tournament-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .input-group {
+        flex-direction: column;
+    }
+
+    .btn-neon {
+        padding: 12px;
+        justify-content: center;
+    }
+}
