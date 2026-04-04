@@ -23,6 +23,45 @@ const editorView = document.getElementById('editorView');
 const exitChallengeBtn = document.getElementById('exitChallengeBtn');
 const challengeListContainer = document.getElementById('challengeList');
 
+let completedChallenges = new Set();
+
+function loadProgress() {
+    const saved = localStorage.getItem('practiceProgress');
+    if (saved) {
+        completedChallenges = new Set(JSON.parse(saved));
+    }
+}
+
+function saveProgress() {
+    localStorage.setItem('practiceProgress', JSON.stringify([...completedChallenges]));
+}
+
+function isChallengeCompleted(challengeId) {
+    return completedChallenges.has(challengeId);
+}
+
+function markChallengeCompleted(challengeId) {
+    completedChallenges.add(challengeId);
+    saveProgress();
+    const card = document.querySelector(`.challenge-card[data-id="${challengeId}"]`);
+    if (card) {
+        card.classList.add('completed');
+        const badge = card.querySelector('.completed-badge');
+        if (!badge) {
+            card.innerHTML += '<span class="completed-badge"><i class="fa-solid fa-check-circle"></i></span>';
+        }
+    }
+}
+
+function getNextUncompletedChallenge() {
+    for (const challenge of challenges) {
+        if (!completedChallenges.has(challenge.id)) {
+            return challenge;
+        }
+    }
+    return null;
+}
+
 function setLED(state) {
     ledRed.classList.remove('active');
     ledAmber.classList.remove('active');
@@ -32,10 +71,9 @@ function setLED(state) {
     else if (state === 'completed') ledGreen.classList.add('active');
 }
 
-function showConsole(msg, isError = false) {
+function showConsole(msg) {
     outputConsole.innerHTML = msg;
-    if (isError) outputConsole.style.color = '#ff5f57';
-    else outputConsole.style.color = 'var(--neon-green)';
+    outputConsole.style.color = '';
 }
 
 function showLoading(show) {
@@ -106,6 +144,7 @@ async function loadChallenges() {
     try {
         challenges = await fetchPracticeChallenges();
         if (!challenges.length) throw new Error('Nenhum desafio disponível');
+        loadProgress();
         renderChallengeList();
         showChallengesView();
     } catch (err) {
@@ -120,10 +159,11 @@ function renderChallengeList() {
         return;
     }
     challengeListContainer.innerHTML = challenges.map(c => `
-        <div class="challenge-card" data-id="${c.id}">
+        <div class="challenge-card ${completedChallenges.has(c.id) ? 'completed' : ''}" data-id="${c.id}">
             <h3><i class="fa-solid fa-code"></i> ${c.title}</h3>
             <p>${c.description ? c.description.substring(0, 100) + '...' : 'Sem descrição'}</p>
             <span class="difficulty"><i class="fa-solid fa-chart-line"></i> Treino livre</span>
+            ${completedChallenges.has(c.id) ? '<span class="completed-badge"><i class="fa-solid fa-check-circle"></i></span>' : ''}
         </div>
     `).join('');
 
@@ -207,9 +247,10 @@ async function handleSubmission(type) {
         showLoading(false);
 
         if (type === 'test') {
-            let output = `<div class="console-verdict verdict-${result.verdict.toLowerCase()}">
-                            <strong>VEREDITO: ${result.verdict.toUpperCase()}</strong>
-                          </div>`;
+            let verdictClass = result.verdict.toLowerCase().replace('_', '-');
+            let output = `<div class="console-verdict verdict-${verdictClass}">
+                <strong>VEREDITO: ${result.verdict.toUpperCase()}</strong>
+              </div>`;
 
             if (result.testCases && result.testCases.length) {
                 result.testCases.forEach((tc, i) => {
@@ -244,23 +285,46 @@ async function handleSubmission(type) {
             showConsole(output);
         } else {
             if (result.verdict === 'accepted') {
+                markChallengeCompleted(currentChallenge.id);
                 showConsole('<div class="console-success"><i class="fa-solid fa-trophy"></i> PARABÉNS! SOLUÇÃO ACEITA!</div>');
                 setLED('completed');
                 setTimeout(() => setLED('idle'), 2000);
-            } else {
-                showConsole(`<div class="test-case-box case-failed">
-                                <div class="test-case-header">
-                                    <span>SUBMISSÃO FINAL</span>
-                                    <i class="fa-solid fa-circle-xmark"></i>
-                                </div>
-                                <div class="console-message" style="padding: 10px">${result.message || 'Falha na submissão'}</div>
-                             </div>`, true);
+
+                const next = getNextUncompletedChallenge();
+                if (next) {
+                    setTimeout(() => {
+                        currentChallenge = next;
+                        renderChallenge(next);
+                        if (editor) editor.setValue('');
+                        showConsole(`<i class="fa-solid fa-arrow-right"></i> Próximo desafio: ${next.title}`);
+                    }, 1500);
+                } else {
+                    showCompletionOverlay();
+                }
             }
         }
     } catch (err) {
         showLoading(false);
         showConsole(`<div class="console-error"><i class="fa-solid fa-bug"></i> Erro: ${err.message}</div>`, true);
     }
+}
+
+function showCompletionOverlay() {
+    const overlay = document.createElement('div');
+    overlay.className = 'completion-overlay';
+    overlay.innerHTML = `
+        <div class="completion-content">
+            <i class="fa-solid fa-crown"></i>
+            <h2>Parabéns!</h2>
+            <p>Você completou todos os desafios de prática.</p>
+            <button class="btn-neon" id="closeCompletionBtn">Fechar</button>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+    document.getElementById('closeCompletionBtn').addEventListener('click', () => {
+        overlay.remove();
+        showChallengesView();
+    });
 }
 
 testBtn.addEventListener('click', () => handleSubmission('test'));
