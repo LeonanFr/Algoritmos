@@ -172,7 +172,7 @@ function showLoading(show) {
 function showWaitingScreen() {
     problemTitle.innerText = 'Aguardando início...';
     problemMeta.innerHTML = '';
-    problemDescription.innerHTML = '<i class="fa-solid fa-hourglass-half"></i> O torneio ainda não começou. Aguarde o sinal da organização.';
+    problemDescription.innerHTML = '<p><i class="fa-solid fa-hourglass-half"></i> O torneio ainda não começou. Aguarde o sinal da organização.</p>';
     problemSamples.innerHTML = '';
     if (editor) {
         editor.setValue('');
@@ -305,6 +305,16 @@ function startTournamentCountdown(endTimeISO) {
     globalTimerInterval = setInterval(updateTimer, 250);
 }
 
+function formatDescription(text) {
+    if (!text) return '';
+    const paragraphs = text.split(/\n\s*\n/);
+    return paragraphs.map(para => {
+        const lines = para.split('\n');
+        const formatted = lines.map(line => line.trim()).join('<br>');
+        return `<p>${formatted}</p>`;
+    }).join('');
+}
+
 function renderChallenge(challenge) {
     currentChallenge = challenge;
     problemTitle.innerText = challenge.title;
@@ -314,13 +324,14 @@ function renderChallenge(challenge) {
         <span>Memória limite: <i class="fa-solid fa-microchip"></i> ${challenge.memoryLimitMB}MB</span>
     `;
 
-    let html = `<div class="problem-description">${challenge.description || ''}</div>`;
+    const formattedDescription = formatDescription(challenge.description || '');
+    let html = `<div class="problem-description">${formattedDescription}</div>`;
 
     if (challenge.inputFormat) {
         html += `
             <div class="problem-section">
                 <h4><i class="fa-solid fa-keyboard"></i> Formato de Entrada</h4>
-                <pre>${challenge.inputFormat}</pre>
+                <pre>${escapeHtml(challenge.inputFormat)}</pre>
             </div>`;
     }
 
@@ -328,7 +339,7 @@ function renderChallenge(challenge) {
         html += `
             <div class="problem-section">
                 <h4><i class="fa-solid fa-print"></i> Formato de Saída</h4>
-                <pre>${challenge.outputFormat}</pre>
+                <pre>${escapeHtml(challenge.outputFormat)}</pre>
             </div>`;
     }
 
@@ -336,14 +347,14 @@ function renderChallenge(challenge) {
         html += `
             <div class="problem-section">
                 <h4><i class="fa-solid fa-ban"></i> Restrições</h4>
-                <pre>${challenge.constraints}</pre>
+                <pre>${escapeHtml(challenge.constraints)}</pre>
             </div>`;
     }
 
     if (challenge.samples && challenge.samples.length) {
         html += '<h4><i class="fa-solid fa-thumbtack"></i> Exemplos:</h4>';
         challenge.samples.forEach((s, idx) => {
-            html += `<pre><strong>Entrada ${idx + 1}:</strong>\n${s.input}\n<strong>Saída:</strong>\n${s.output}</pre>`;
+            html += `<pre><strong>Entrada ${idx + 1}:</strong>\n${escapeHtml(s.input)}\n<strong>Saída:</strong>\n${escapeHtml(s.output)}</pre>`;
         });
     }
 
@@ -351,6 +362,15 @@ function renderChallenge(challenge) {
 
     const practiceInfo = document.getElementById('practiceInfo');
     if (practiceInfo) practiceInfo.style.display = 'none';
+}
+
+function escapeHtml(str) {
+    return str.replace(/[&<>]/g, function (m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
 }
 
 async function loadChallenges() {
@@ -519,21 +539,21 @@ async function handleSubmission(type) {
                             <div class="test-case-data">
                                 <div class="data-line">
                                     <span class="label">INPUT:</span>
-                                    <span class="value">${tc.input}</span>
+                                    <span class="value">${escapeHtml(tc.input)}</span>
                                 </div>
                                 <div class="data-line">
                                     <span class="label">EXPECTED:</span>
-                                    <span class="value">${tc.expected}</span>
+                                    <span class="value">${escapeHtml(tc.expected)}</span>
                                 </div>
                                 <div class="data-line">
                                     <span class="label">OUTPUT:</span>
-                                    <span class="value">${tc.output}</span>
+                                    <span class="value">${escapeHtml(tc.output)}</span>
                                 </div>
                             </div>
                         </div>`;
                 });
             } else if (result.message) {
-                output += `<div class="console-message">${result.message}</div>`;
+                output += `<div class="console-message">${escapeHtml(result.message)}</div>`;
             }
             showConsole(output);
         } else {
@@ -553,7 +573,7 @@ async function handleSubmission(type) {
                                     <span>SUBMISSÃO FINAL</span>
                                     <i class="fa-solid fa-circle-xmark"></i>
                                 </div>
-                                <div class="console-message" style="padding: 10px">${errorMsg}</div>
+                                <div class="console-message" style="padding: 10px">${escapeHtml(errorMsg)}</div>
                              </div>`);
             }
         }
