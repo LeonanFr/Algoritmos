@@ -442,21 +442,45 @@ async function handleSubmission(type) {
         });
 
         if (type === 'test') {
-            let output = `<strong>Veredito: ${result.verdict.toUpperCase()}</strong><br>`;
+            let output = `<div class="console-verdict verdict-${result.verdict.toLowerCase()}">
+                            <strong>VEREDITO: ${result.verdict.toUpperCase()}</strong>
+                          </div>`;
+
             if (result.testCases && result.testCases.length) {
                 result.testCases.forEach((tc, i) => {
-                    const iconPass = tc.passed ? '<i class="fa-solid fa-check-circle" style="color: var(--neon-green)"></i>' : '<i class="fa-solid fa-circle-xmark" style="color: #ff5f57"></i>';
-                    output += `<hr><b>Caso ${i + 1}</b> ${iconPass}<br>`;
-                    output += `<i class="fa-solid fa-inbox"></i> Input: ${tc.input}<br><i class="fa-solid fa-upload"></i> Esperado: ${tc.expected}<br><i class="fa-solid fa-laptop-code"></i> Recebido: ${tc.output}<br>`;
+                    const statusClass = tc.passed ? 'case-passed' : 'case-failed';
+                    const statusIcon = tc.passed ? 'fa-check-circle' : 'fa-circle-xmark';
+
+                    output += `
+                        <div class="test-case-box ${statusClass}">
+                            <div class="test-case-header">
+                                <span><i class="fa-solid fa-flask"></i> Caso ${i + 1}</span>
+                                <i class="fa-solid ${statusIcon}"></i>
+                            </div>
+                            <div class="test-case-data">
+                                <div class="data-line">
+                                    <span class="label">INPUT:</span>
+                                    <span class="value">${tc.input}</span>
+                                </div>
+                                <div class="data-line">
+                                    <span class="label">EXPECTED:</span>
+                                    <span class="value">${tc.expected}</span>
+                                </div>
+                                <div class="data-line">
+                                    <span class="label">OUTPUT:</span>
+                                    <span class="value">${tc.output}</span>
+                                </div>
+                            </div>
+                        </div>`;
                 });
             } else if (result.message) {
-                output += result.message;
+                output += `<div class="console-message">${result.message}</div>`;
             }
-            showConsole(output, result.verdict !== 'accepted');
+            showConsole(output);
         } else {
             if (result.verdict === 'accepted') {
                 teamCompleted = true;
-                showConsole('<i class="fa-solid fa-trophy"></i> PARABÉNS! DESAFIO CONCLUÍDO!');
+                showConsole('<div class="console-success"><i class="fa-solid fa-trophy"></i> PARABÉNS! DESAFIO CONCLUÍDO!</div>');
                 setLED('completed');
                 testBtn.disabled = true;
                 submitBtn.disabled = true;
@@ -464,7 +488,13 @@ async function handleSubmission(type) {
                 if (socket) socket.close();
                 if (globalTimerInterval) clearInterval(globalTimerInterval);
             } else {
-                showConsole(`<i class="fa-solid fa-circle-xmark"></i> ${result.message || 'Falha na submissão final'}`, true);
+                showConsole(`<div class="test-case-box case-failed">
+                                <div class="test-case-header">
+                                    <span>SUBMISSÃO FINAL</span>
+                                    <i class="fa-solid fa-circle-xmark"></i>
+                                </div>
+                                <div class="console-message" style="padding: 10px">${result.message || 'Falha na submissão final'}</div>
+                             </div>`, true);
             }
         }
 
@@ -476,9 +506,9 @@ async function handleSubmission(type) {
     } catch (err) {
         if (err.cooldown) {
             startCooldown(type, err.remaining);
-            showConsole(`<i class="fa-solid fa-hourglass-half"></i> Cooldown: aguarde ${err.remaining} segundos.`, true);
+            showConsole(`<div class="console-cooldown"><i class="fa-solid fa-hourglass-half"></i> Cooldown: aguarde ${err.remaining} segundos.</div>`, true);
         } else {
-            showConsole(`<i class="fa-solid fa-bug"></i> Erro: ${err.message}`, true);
+            showConsole(`<div class="console-error"><i class="fa-solid fa-bug"></i> Erro: ${err.message}</div>`, true);
         }
     } finally {
         showLoading(false);

@@ -451,3 +451,92 @@ body {
     scrollbar-width: thin;
     scrollbar-color: var(--neon-purple) var(--bg-header);
 }
+
+.console-verdict {
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+    text-align: center;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 0.7rem;
+}
+
+.verdict-accepted {
+    background: rgba(0, 255, 102, 0.1);
+    color: var(--neon-green);
+    border: 1px solid var(--neon-green);
+}
+
+.verdict-wrong_answer,
+.verdict-error {
+    background: rgba(255, 95, 87, 0.1);
+    color: #ff5f57;
+    border: 1px solid #ff5f57;
+}
+
+.test-case-box {
+    margin-bottom: 15px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    overflow: hidden;
+    border-left: 4px solid var(--neon-purple);
+}
+
+.test-case-box.case-passed {
+    border-left-color: var(--neon-green);
+}
+
+.test-case-box.case-failed {
+    border-left-color: #ff5f57;
+}
+
+.test-case-header {
+    background: rgba(176, 38, 255, 0.1);
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: #fff;
+}
+
+.case-passed .test-case-header {
+    background: rgba(0, 255, 102, 0.05);
+}
+
+.case-failed .test-case-header {
+    background: rgba(255, 95, 87, 0.05);
+}
+
+.test-case-data {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.data-line {
+    display: flex;
+    gap: 10px;
+    font-size: 0.8rem;
+}
+
+.data-line .label {
+    color: var(--text-muted);
+    min-width: 80px;
+    font-weight: bold;
+}
+
+.data-line .value {
+    color: #fff;
+    font-family: 'JetBrains Mono', monospace;
+    word-break: break-all;
+}
+
+.console-success {
+    color: var(--neon-green);
+    font-weight: bold;
+    text-align: center;
+    padding: 20px;
+}
