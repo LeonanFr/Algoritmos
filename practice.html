@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Prática | Algoritmos</title>
+    <link rel="stylesheet" href="css/editor.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&family=Press+Start+2P&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" href="assets/algoritmo.png">
+</head>
+
+<body>
+
+    <nav class="topbar">
+        <div class="brand">
+            <i class="fa-solid fa-dumbbell"></i>
+            <span>Modo_Prática</span>
+        </div>
+        <div class="timer-display">
+            <span id="practiceInfo"><i class="fa-solid fa-infinity"></i> Treino Livre</span>
+        </div>
+    </nav>
+
+    <div class="workspace">
+        <section class="panel challenge-list-panel">
+            <div class="terminal-bar panel-header">
+                <span class="dot red"></span>
+                <span class="dot yellow"></span>
+                <span class="dot green"></span>
+                <span class="term-title"><i class="fa-solid fa-list"></i> Desafios</span>
+            </div>
+            <div class="challenge-list-content" id="challengeListPanel">
+                <div class="loading-placeholder">Carregando desafios...</div>
+            </div>
+        </section>
+
+        <div class="right-panel">
+            <div class="editor-wrapper">
+                <div class="terminal-bar editor-header">
+                    <div class="lang-control">
+                        <i class="fa-solid fa-code"></i>
+                        <select id="languageSelect" class="language-select">
+                            <option value="c">C</option>
+                            <option value="cpp" selected>C++</option>
+                            <option value="java">Java</option>
+                            <option value="javascript">JavaScript</option>
+                            <option value="python">Python</option>
+                            <option value="kotlin">Kotlin</option>
+                        </select>
+                    </div>
+                    <div class="team-status">
+                        <span class="term-title">Status:</span>
+                        <div class="led-indicators">
+                            <div class="led red" id="ledRed"></div>
+                            <div class="led amber" id="ledAmber"></div>
+                            <div class="led green" id="ledGreen"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="window-body">
+                    <div id="codeEditor" style="width: 100%; height: 100%;"></div>
+                </div>
+            </div>
+
+            <div class="console-wrapper">
+                <div class="terminal-bar console-header">
+                    <span class="term-title"><i class="fa-solid fa-terminal"></i> console_output</span>
+                    <div class="action-buttons">
+                        <button id="testBtn" class="btn-ghost">
+                            <i class="fa-solid fa-vial"></i> Testar
+                        </button>
+                        <button id="submitBtn" class="btn-neon">
+                            <i class="fa-solid fa-upload"></i> Enviar
+                        </button>
+                    </div>
+                </div>
+                <div id="consoleContent" class="console-body">
+                    <i class="fa-solid fa-info-circle"></i> Modo prática – sem cooldown, sem limite de tentativas.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mobile-overlay">
+        <div>
+            <i class="fa-solid fa-desktop" style="font-size: 48px; margin-bottom: 20px;"></i>
+            <h2>Dispositivo não suportado</h2>
+            <p>Utilize um notebook ou desktop para treinar.</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
+    <script src="scripts/practice.js"></script>
+</body>
+
+</html>

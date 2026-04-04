@@ -540,3 +540,61 @@ body {
     text-align: center;
     padding: 20px;
 }
+
+.challenge-list-panel {
+    flex: 2;
+    min-width: 220px;
+}
+
+.challenge-list-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+}
+
+.challenge-list-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.85rem;
+}
+
+.challenge-list-item:hover {
+    border-color: var(--neon-purple);
+    background: rgba(176, 38, 255, 0.1);
+}
+
+.challenge-list-item.active {
+    border-color: var(--neon-green);
+    background: rgba(0, 255, 102, 0.1);
+    color: var(--neon-green);
+}
+
+.challenge-list-item i {
+    width: 20px;
+    color: var(--neon-purple);
+}
+
+.challenge-list-item.active i {
+    color: var(--neon-green);
+}
+
+#practiceInfo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.term-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}

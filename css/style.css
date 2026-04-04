@@ -412,3 +412,13 @@ footer {
         justify-content: center;
     }
 }
+
+.practice-card {
+    border-color: var(--neon-purple) !important;
+    background: linear-gradient(135deg, rgba(176, 38, 255, 0.1), rgba(0, 0, 0, 0.2)) !important;
+}
+
+.practice-card:hover {
+    border-color: var(--neon-purple) !important;
+    box-shadow: 0 0 20px rgba(176, 38, 255, 0.3) !important;
+}

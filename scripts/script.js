@@ -115,4 +115,8 @@ teamCodeInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') validateTeam();
 });
 
+document.getElementById('practiceCard').addEventListener('click', () => {
+    window.location.href = 'practice.html';
+});
+
 fetchTournaments();
