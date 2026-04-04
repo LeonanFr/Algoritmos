@@ -82,10 +82,12 @@ function hideHandover() {
     if (handoverInterval) clearInterval(handoverInterval);
 }
 
-function startRotationCycle(startTimeISO, playerMin, handoverSec) {
+function startRotationCycle(startTimeISO, endTimeISO, playerMin, handoverSec, finalExtraMin) {
     const start = new Date(startTimeISO).getTime();
+    const end = new Date(endTimeISO).getTime();
     playerDuration = playerMin * 60;
     handoverSecondsConfig = handoverSec;
+    const finalExtraSeconds = (finalExtraMin || 0) * 60;
     totalCycle = playerDuration + handoverSec;
     cycleStartTime = start;
 
@@ -93,6 +95,14 @@ function startRotationCycle(startTimeISO, playerMin, handoverSec) {
         if (tournamentEnded || teamCompleted) return;
 
         const now = Date.now();
+        const remainingGlobalSeconds = (end - now) / 1000;
+
+        if (remainingGlobalSeconds <= finalExtraSeconds) {
+            if (handoverActive) hideHandover();
+            requestAnimationFrame(checkRotation);
+            return;
+        }
+
         const elapsed = (now - cycleStartTime) / 1000;
         const cyclePosition = elapsed % totalCycle;
 
@@ -169,7 +179,7 @@ async function checkIfTournamentAlreadyStarted() {
         if (now >= start) {
             tournamentStarted = true;
             startTournamentCountdown(t.endTime);
-            startRotationCycle(t.startTime, t.rotationConfig.playerMinutes, t.rotationConfig.handoverSeconds);
+            startRotationCycle(t.startTime, t.endTime, t.rotationConfig.playerMinutes, t.rotationConfig.handoverSeconds, t.rotationConfig.finalExtraMin);
             await loadChallenges();
             enableChallengeMode();
             return true;
@@ -221,8 +231,7 @@ function connectWebSocket() {
             if (data.event === 'TOURNAMENT_START' && !tournamentStarted) {
                 tournamentStarted = true;
                 startTournamentCountdown(data.endTime);
-                startRotationCycle(data.startTime, data.config.playerMinutes, data.config.handoverSeconds);
-                loadChallenges();
+                startRotationCycle(data.startTime, data.endTime, data.config.playerMinutes, data.config.handoverSeconds, data.config.finalExtraMin); loadChallenges();
                 enableChallengeMode();
             }
         } catch (e) {
