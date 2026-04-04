@@ -10,6 +10,7 @@ let globalTimerInterval = null;
 let cooldownTimers = { test: null, submit: null };
 let editor = null;
 let tournamentStarted = false;
+let teamCompleted = false;
 
 const ledRed = document.getElementById('ledRed');
 const ledAmber = document.getElementById('ledAmber');
@@ -163,6 +164,7 @@ async function checkIfTournamentAlreadyStarted() {
         if (now >= start) {
             tournamentStarted = true;
             startTournamentCountdown(t.endTime);
+            startRotationCycle(t.startTime, t.rotationConfig.playerMinutes, t.rotationConfig.handoverSeconds);
             await loadChallenges();
             enableChallengeMode();
             return true;
@@ -273,6 +275,7 @@ async function loadChallenges() {
 
         const status = await fetchTeamStatus();
         if (status && status.completed) {
+            teamCompleted = true;
             setLED('completed');
             showConsole('<i class="fa-solid fa-check-circle"></i> Equipe já completou o desafio!', false);
             testBtn.disabled = true;
@@ -382,7 +385,7 @@ async function handleSubmission(type) {
                 result.testCases.forEach((tc, i) => {
                     const iconPass = tc.passed ? '<i class="fa-solid fa-check-circle" style="color: var(--neon-green)"></i>' : '<i class="fa-solid fa-circle-xmark" style="color: #ff5f57"></i>';
                     output += `<hr><b>Caso ${i + 1}</b> ${iconPass}<br>`;
-                    output += `📥 Input: ${tc.input}<br>📤 Esperado: ${tc.expected}<br>💻 Recebido: ${tc.output}<br>`;
+                    output += `<i class="fa-solid fa-inbox"></i> Input: ${tc.input}<br><i class="fa-solid fa-upload"></i> Esperado: ${tc.expected}<br><i class="fa-solid fa-laptop-code"></i> Recebido: ${tc.output}<br>`;
                 });
             } else if (result.message) {
                 output += result.message;
@@ -390,6 +393,7 @@ async function handleSubmission(type) {
             showConsole(output, result.verdict !== 'accepted');
         } else {
             if (result.verdict === 'accepted') {
+                teamCompleted = true;
                 showConsole('<i class="fa-solid fa-trophy"></i> PARABÉNS! DESAFIO CONCLUÍDO!');
                 setLED('completed');
                 testBtn.disabled = true;
