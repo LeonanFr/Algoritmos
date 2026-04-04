@@ -365,79 +365,63 @@ body {
 }
 
 .handover-overlay {
+    display: none;
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(8px);
-    z-index: 1000;
+    background-color: var(--bg-main);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+.countdown {
     display: flex;
     justify-content: center;
     align-items: center;
-    font-family: 'Press Start 2P', monospace;
-}
-
-.handover-content {
-    text-align: center;
-    color: var(--neon-green);
-}
-
-.handover-message {
-    font-size: 1.5rem;
-    margin-bottom: 2rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-}
-
-.handover-message i {
-    font-size: 2rem;
-}
-
-.handover-timer {
     position: relative;
-    width: 200px;
-    height: 200px;
-    margin: 0 auto 1rem;
-}
-
-.handover-svg {
     width: 100%;
     height: 100%;
-    transform: rotate(-90deg);
+    font-family: 'Press Start 2P', cursive;
+    font-size: 30vmin;
 }
 
-.handover-bg {
-    fill: none;
-    stroke: rgba(0, 255, 102, 0.2);
-    stroke-width: 6;
-}
-
-.handover-fill {
-    fill: none;
-    stroke: var(--neon-green);
-    stroke-width: 6;
-    stroke-linecap: round;
-    stroke-dasharray: 283;
-    stroke-dashoffset: 283;
-    transition: stroke-dashoffset 0.1s linear;
-}
-
-.handover-seconds {
+.countdown__fill {
+    display: block;
+    width: 100%;
+    height: 100%;
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 3rem;
-    font-family: 'Press Start 2P', monospace;
-    color: var(--neon-green);
+    left: 0;
+    bottom: 0;
+    background: var(--neon-purple);
 }
 
-.handover-note {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    margin-top: 1rem;
+.countdown__digit {
+    width: 100%;
+    color: var(--neon-purple);
+    text-align: center;
+    mix-blend-mode: difference;
+    pointer-events: none;
+    user-select: none;
+    z-index: 2;
+}
+
+.handover-label {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    justify-content: center;
+    position: absolute;
+    top: 20%;
+    width: 100%;
+    text-align: center;
+    color: var(--neon-purple);
+    font-family: 'Press Start 2P', cursive;
+    font-size: 3rem;
+    mix-blend-mode: difference;
+    z-index: 3;
+    pointer-events: none;
 }

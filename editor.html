@@ -103,21 +103,12 @@
         </div>
     </div>
 
-    <div id="handoverOverlay" class="handover-overlay" style="display: none;">
-        <div class="handover-content">
-            <div class="handover-message">
-                <i class="fa-solid fa-people-arrows"></i>
-                <span>Próximo jogador</span>
-            </div>
-            <div class="handover-timer" id="handoverTimer">
-                <svg viewBox="0 0 100 100" class="handover-svg">
-                    <circle cx="50" cy="50" r="45" class="handover-bg" />
-                    <circle cx="50" cy="50" r="45" class="handover-fill" id="handoverFill" />
-                </svg>
-                <div class="handover-seconds" id="handoverSeconds">00</div>
-            </div>
-            <p class="handover-note">Preparando próximo turno...</p>
+    <div id="handoverOverlay" class="handover-overlay">
+        <div class="countdown countdown--wide" id="countdown">
+            <div class="countdown__fill" id="handoverFill"></div>
+            <div class="countdown__digit" id="handoverSeconds">00</div>
         </div>
+        <div class="handover-label"><i class="fa-solid fa-rotate"></i> Troca de Jogador</div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>

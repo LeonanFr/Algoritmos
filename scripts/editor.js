@@ -47,21 +47,18 @@ function showHandover(durationSeconds) {
     submitBtn.disabled = true;
     if (editor) editor.updateOptions({ readOnly: true });
 
-    const circumference = 283;
-    handoverFill.style.strokeDasharray = circumference;
-    handoverFill.style.strokeDashoffset = circumference;
-
     function updateHandover() {
         if (!handoverActive) return;
+
         const now = performance.now();
         const elapsed = (now - handoverStartTime) / 1000;
         const remaining = Math.max(0, handoverDuration - elapsed);
         const seconds = Math.ceil(remaining);
+
         handoverSecondsSpan.textContent = seconds.toString().padStart(2, '0');
 
-        const progress = elapsed / handoverDuration;
-        const dashoffset = circumference * (1 - Math.min(1, progress));
-        handoverFill.style.strokeDashoffset = dashoffset;
+        const progress = Math.min(1, elapsed / handoverDuration);
+        handoverFill.style.height = (100 - (progress * 100)) + '%';
 
         if (remaining <= 0) {
             hideHandover();
@@ -69,6 +66,7 @@ function showHandover(durationSeconds) {
             requestAnimationFrame(updateHandover);
         }
     }
+
     requestAnimationFrame(updateHandover);
 }
 
