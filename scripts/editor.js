@@ -10,6 +10,7 @@ let globalTimerInterval = null;
 let cooldownTimers = { test: null, submit: null };
 let editor = null;
 let tournamentStarted = false;
+let tournamentEnded = false;
 let teamCompleted = false;
 
 const ledRed = document.getElementById('ledRed');
@@ -73,9 +74,11 @@ function showHandover(durationSeconds) {
 function hideHandover() {
     handoverActive = false;
     handoverOverlay.style.display = 'none';
-    testBtn.disabled = false;
-    submitBtn.disabled = false;
-    if (editor && tournamentStarted && !teamCompleted) editor.updateOptions({ readOnly: false });
+
+    if (!cooldownTimers.test && tournamentStarted && !teamCompleted && !tournamentEnded) testBtn.disabled = false;
+    if (!cooldownTimers.submit && tournamentStarted && !teamCompleted && !tournamentEnded) submitBtn.disabled = false;
+
+    if (editor && tournamentStarted && !teamCompleted && !tournamentEnded) editor.updateOptions({ readOnly: false });
     if (handoverInterval) clearInterval(handoverInterval);
 }
 
@@ -87,6 +90,8 @@ function startRotationCycle(startTimeISO, playerMin, handoverSec) {
     cycleStartTime = start;
 
     function checkRotation() {
+        if (tournamentEnded || teamCompleted) return;
+
         const now = Date.now();
         const elapsed = (now - cycleStartTime) / 1000;
         const cyclePosition = elapsed % totalCycle;
@@ -240,9 +245,12 @@ function startTournamentCountdown(endTimeISO) {
         if (timerEl) timerEl.innerHTML = `<i class="fa-solid fa-clock"></i> ${minutes}:${seconds.toString().padStart(2, '0')}`;
         if (diff <= 0) {
             clearInterval(globalTimerInterval);
+            tournamentEnded = true;
+            if (handoverActive) hideHandover();
             showConsole('<i class="fa-solid fa-clock"></i> Tempo do torneio esgotado!', true);
             testBtn.disabled = true;
             submitBtn.disabled = true;
+            if (editor) editor.updateOptions({ readOnly: true });
         }
     };
     updateTimer();
@@ -332,19 +340,29 @@ function initMonaco() {
 function startCooldown(type, seconds) {
     const btn = type === 'test' ? testBtn : submitBtn;
     const icon = type === 'test' ? 'vial' : 'upload';
+
+    if (cooldownTimers[type]) clearInterval(cooldownTimers[type]);
+
     btn.disabled = true;
     setLED('cooldown');
     let remaining = seconds;
+
     const interval = setInterval(() => {
         remaining--;
         btn.innerHTML = `<i class="fa-solid fa-${icon}"></i> ${type === 'test' ? 'Testar' : 'Enviar'} (${remaining}s)`;
+
         if (remaining <= 0) {
             clearInterval(interval);
-            btn.disabled = false;
+            cooldownTimers[type] = null;
             btn.innerHTML = `<i class="fa-solid fa-${icon}"></i> ${type === 'test' ? 'Testar' : 'Enviar'}`;
+
+            if (!handoverActive && tournamentStarted && !tournamentEnded && !teamCompleted) {
+                btn.disabled = false;
+            }
             setLED('idle');
         }
     }, 1000);
+
     cooldownTimers[type] = interval;
 }
 
