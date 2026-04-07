@@ -23,10 +23,12 @@ body {
     background-color: var(--bg-main);
     color: var(--text-primary);
     font-family: 'Fira Code', monospace;
-    height: 100vh;
+    height: auto;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .topbar {
@@ -57,13 +59,56 @@ body {
     gap: 10px;
 }
 
-#tournamentTimer {
+#practiceInfo {
     display: flex;
-    justify-content: center;
     align-items: center;
     gap: 0.5rem;
 }
 
+#exitChallengeBtn {
+    margin-left: auto;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#exitChallengeBtn:hover {
+    border-color: var(--neon-green);
+    color: var(--neon-green);
+}
+
+.view {
+    display: none;
+    width: 100%;
+}
+
+.view.active {
+    display: block;
+}
+
+#challengesView.active {
+    display: block;
+    height: auto;
+    overflow: visible;
+}
+
+/* View do editor – layout fixo sem scroll na página (scroll interno) */
+#editorView.active {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 60px);
+    overflow: hidden;
+}
+
+/* Workspace do editor (usado dentro de #editorView) */
 .workspace {
     display: flex;
     flex: 1;
@@ -180,40 +225,7 @@ body {
     word-break: break-all;
 }
 
-.team-status {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.led-indicators {
-    display: flex;
-    gap: 10px;
-}
-
-.led {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
-    transition: all 0.3s;
-}
-
-.led.red.active {
-    background: #ff3c3c;
-    box-shadow: 0 0 10px #ff3c3c;
-}
-
-.led.amber.active {
-    background: #ffaa00;
-    box-shadow: 0 0 10px #ffaa00;
-}
-
-.led.green.active {
-    background: var(--neon-green);
-    box-shadow: 0 0 10px var(--neon-green);
-}
-
+/* Editor wrapper */
 .editor-wrapper {
     flex: 7;
     display: flex;
@@ -247,6 +259,40 @@ body {
 .language-select option {
     background: var(--bg-panel);
     color: var(--text-primary);
+}
+
+.team-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.led-indicators {
+    display: flex;
+    gap: 10px;
+}
+
+.led {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    transition: all 0.3s;
+}
+
+.led.red.active {
+    background: #ff3c3c;
+    box-shadow: 0 0 10px #ff3c3c;
+}
+
+.led.amber.active {
+    background: #ffaa00;
+    box-shadow: 0 0 10px #ffaa00;
+}
+
+.led.green.active {
+    background: var(--neon-green);
+    box-shadow: 0 0 10px var(--neon-green);
 }
 
 .action-buttons {
@@ -336,122 +382,149 @@ body {
     background: rgba(0, 0, 0, 0.3);
 }
 
-.mobile-overlay {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: #0a0c10;
-    backdrop-filter: blur(8px);
-    z-index: 9999;
-    justify-content: center;
-    align-items: center;
+/* Estilos da lista de desafios (cards) */
+.challenges-container {
+    max-width: 1000px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.challenges-header {
     text-align: center;
-    color: var(--text-primary);
-    font-family: 'Fira Code', monospace;
-    font-size: 1rem;
+    margin-bottom: 30px;
+}
+
+.challenges-header h2 {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 1.2rem;
+    color: var(--neon-green);
+    margin-bottom: 10px;
+}
+
+.challenge-list-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.challenge-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
     padding: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
 }
 
-@media (max-width: 900px) {
-    body>*:not(.mobile-overlay) {
-        display: none !important;
-    }
-
-    .mobile-overlay {
-        display: flex;
-    }
+.challenge-card:hover {
+    border-color: var(--neon-purple);
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(176, 38, 255, 0.2);
 }
 
-.handover-overlay {
-    display: none;
+.challenge-card h3 {
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+    color: #fff;
+}
+
+.challenge-card p {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.challenge-card .difficulty {
+    display: inline-block;
+    margin-top: 12px;
+    font-size: 0.7rem;
+    color: var(--neon-purple);
+}
+
+.challenge-card.completed {
+    border-color: var(--neon-green);
+    background: rgba(0, 255, 102, 0.05);
+}
+
+.completed-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: var(--neon-green);
+    font-size: 1.2rem;
+}
+
+.loading-placeholder {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: var(--text-muted);
+    padding: 2rem;
+}
+
+/* Overlay de conclusão */
+.completion-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: var(--bg-main);
-    z-index: 9999;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
-}
-
-.countdown {
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    z-index: 10000;
     display: flex;
     justify-content: center;
     align-items: center;
-    position: relative;
-    width: 100%;
-    height: 100%;
-    font-family: 'Press Start 2P', cursive;
-    font-size: 30vmin;
 }
 
-.countdown__fill {
-    display: block;
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    background: var(--neon-purple);
-}
-
-.countdown__digit {
-    width: 100%;
-    color: var(--neon-purple);
+.completion-content {
     text-align: center;
-    mix-blend-mode: difference;
-    pointer-events: none;
-    user-select: none;
-    z-index: 2;
+    background: var(--bg-panel);
+    border: 1px solid var(--neon-green);
+    border-radius: 20px;
+    padding: 40px;
+    max-width: 400px;
 }
 
-.handover-label {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    justify-content: center;
-    position: absolute;
-    top: 20%;
-    width: 100%;
-    text-align: center;
-    color: var(--neon-purple);
+.completion-content i {
+    font-size: 4rem;
+    color: var(--neon-green);
+    margin-bottom: 20px;
+}
+
+.completion-content h2 {
     font-family: 'Press Start 2P', cursive;
-    font-size: 3rem;
-    mix-blend-mode: difference;
-    z-index: 3;
+    color: var(--neon-green);
+    margin-bottom: 15px;
+}
+
+.completion-content p {
+    margin-bottom: 25px;
+}
+
+/* Toast */
+.toast-notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(0, 255, 102, 0.9);
+    color: #0a0c10;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.85rem;
+    font-weight: bold;
+    z-index: 10000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
     pointer-events: none;
+    box-shadow: 0 0 15px rgba(0, 255, 102, 0.5);
 }
 
-::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+.toast-notification.show {
+    opacity: 1;
 }
 
-::-webkit-scrollbar-track {
-    background: var(--bg-header);
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb {
-    background: var(--neon-purple);
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: var(--neon-green);
-    box-shadow: 0 0 6px var(--neon-green);
-}
-
-* {
-    scrollbar-width: thin;
-    scrollbar-color: var(--neon-purple) var(--bg-header);
-}
-
+/* Vereditos e casos de teste (console) */
 .console-verdict {
     padding: 12px;
     margin-bottom: 15px;
@@ -469,26 +542,11 @@ body {
 }
 
 .verdict-wrong_answer,
-.verdict-wrong-answer {
-    background: rgba(255, 95, 87, 0.1);
-    color: #ff5f57;
-    border: 1px solid #ff5f57;
-}
-
+.verdict-wrong-answer,
 .verdict-compilation_error,
-.verdict-compilation-error {
-    background: rgba(255, 95, 87, 0.1);
-    color: #ff5f57;
-    border: 1px solid #ff5f57;
-}
-
+.verdict-compilation-error,
 .verdict-runtime_error,
-.verdict-runtime-error {
-    background: rgba(255, 95, 87, 0.1);
-    color: #ff5f57;
-    border: 1px solid #ff5f57;
-}
-
+.verdict-runtime-error,
 .verdict-time_limit_exceeded,
 .verdict-time-limit-exceeded {
     background: rgba(255, 95, 87, 0.1);
@@ -563,13 +621,7 @@ body {
     padding: 20px;
 }
 
-.term-title {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-}
-
+/* Seções do problema (usadas dentro do editor) */
 .problem-section {
     margin-top: 1.5rem;
     margin-bottom: 1.5rem;
@@ -629,4 +681,68 @@ body {
 
 .problem-description p:last-child {
     margin-bottom: 0;
+}
+
+/* Scrollbars customizadas */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-header);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--neon-purple);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--neon-green);
+    box-shadow: 0 0 6px var(--neon-green);
+}
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--neon-purple) var(--bg-header);
+}
+
+/* Term title */
+.term-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+/* Mobile overlay (igual ao editor) */
+.mobile-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #0a0c10;
+    backdrop-filter: blur(8px);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: var(--text-primary);
+    font-family: 'Fira Code', monospace;
+    font-size: 1rem;
+    padding: 20px;
+}
+
+@media (max-width: 900px) {
+    body>*:not(.mobile-overlay) {
+        display: none !important;
+    }
+
+    .mobile-overlay {
+        display: flex;
+    }
 }
