@@ -1,4 +1,4 @@
-const ORCHESTRATOR_URL = 'https://orquestradoralgoritmos.onrender.com';
+const ORCHESTRATOR_URL = 'https://orquestradoralgoritmos-sfjr.onrender.com/';
 const API_TOKEN = 'cWcG1T82qiJk';
 
 let socket = null;
