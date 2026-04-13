@@ -144,7 +144,7 @@ function renderChallenge(challenge) {
         <span>Tempo limite: <i class="fa-solid fa-stopwatch"></i> ${challenge.timeLimitSec}s</span>
         <span>Memória limite: <i class="fa-solid fa-microchip"></i> ${challenge.memoryLimitMB}MB</span>
     `;
-    
+
     const formattedDescription = formatDescription(challenge.description || '');
     let html = `<div class="problem-description">${formattedDescription}</div>`;
 
@@ -376,7 +376,7 @@ async function handleSubmission(type) {
                     setTimeout(() => {
                         currentChallenge = next;
                         renderChallenge(next);
-                        if (editor) editor.setValue('');
+                        loadSavedPracticeCode();
                         showConsole(`<i class="fa-solid fa-arrow-right"></i> Próximo desafio: ${escapeHtml(next.title)}`);
                     }, 1500);
                 } else {
@@ -466,6 +466,12 @@ function loadSavedPracticeCode() {
         lastSavedCode = saved.code;
         lastSavedLanguage = saved.language;
         showConsole('<i class="fa-solid fa-download"></i> Código restaurado localmente.');
+    } else {
+        if (editor) {
+            editor.setValue('');
+            lastSavedCode = '';
+            lastSavedLanguage = languageSelect.value;
+        }
     }
 }
 

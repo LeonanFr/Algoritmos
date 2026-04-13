@@ -1,36 +1,88 @@
-import json
-import random
+import asyncio
+import aiohttp
+import time
+from typing import Dict, Any
 
-def calcular_saida(wpm_values):
-    n = len(wpm_values)
-    resultados = [0] * n
-    max_so_far = 0
-    for i in range(n - 1, -1, -1):
-        if wpm_values[i] > max_so_far:
-            max_so_far = wpm_values[i]
-        resultados[i] = max_so_far
-    return resultados
+# CONFIGURAÇÕES
+URL = "https://orquestradoralgoritmos-sfjr.onrender.com/api/practice/submit"
+HEADERS = {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer cWcG1T82qiJk"
+}
 
-def gerar_caso_gigante(n, modo):
-    if modo == 'aleatorio':
-        wpm_values = [random.randint(1, 1000) for _ in range(n)]
-    elif modo == 'crescente':
-        wpm_values = sorted([random.randint(1, 1000) for _ in range(n)])
-    
-    resultados = calcular_saida(wpm_values)
-    
-    input_str = f"{n}\n" + " ".join(map(str, wpm_values)) + "\n"
-    expected_str = " ".join(map(str, resultados)) + "\n"
-    
-    return {"input": input_str, "expected": expected_str}
+# Código Kotlin para somar dois números
+KOTLIN_CODE = """
+fun main() {
+    // Lê uma linha com dois números separados por espaço
+    val (a, b) = readLine()!!.split(' ').map { it.toInt() }
+    println(a + b)
+}
+"""
 
-with open('meu_problema.json', 'r', encoding='utf-8') as f:
-    dados = json.load(f)
+PAYLOAD = {
+    "challengeId": "soma_dois_numeros",
+    "language": "kotlin",
+    "code": KOTLIN_CODE,
+    "type": "test"
+}
 
-dados['test_cases'] = dados['test_cases'][:13]
+TOTAL_REQUESTS = 10          # total de requisições
+CONCURRENCY = 30             # quantas serão enviadas ao mesmo tempo
 
-dados['test_cases'].append(gerar_caso_gigante(50000, 'aleatorio'))
-dados['test_cases'].append(gerar_caso_gigante(100000, 'crescente'))
+# Contadores
+success_count = 0
+error_count = 0
+responses_time: Dict[str, list] = {"total": [], "by_status": {}}
 
-with open('problema_enriquecido.json', 'w', encoding='utf-8') as f:
-    json.dump(dados, f, indent=2, ensure_ascii=False)
+async def send_request(session: aiohttp.ClientSession, request_id: int) -> None:
+    global success_count, error_count
+    try:
+        start = time.perf_counter()
+        async with session.post(URL, json=PAYLOAD, headers=HEADERS) as resp:
+            elapsed = time.perf_counter() - start
+            status = resp.status
+            print(f"[{request_id:03d}] Status {status} - {elapsed:.2f}s")
+            if 200 <= status < 300:
+                success_count += 1
+                # Opcional: ler resposta para ver o veredito
+                # body = await resp.text()
+                # print(f"      -> {body[:100]}")
+            else:
+                error_count += 1
+            responses_time["total"].append(elapsed)
+            if status not in responses_time["by_status"]:
+                responses_time["by_status"][status] = []
+            responses_time["by_status"][status].append(elapsed)
+    except Exception as e:
+        error_count += 1
+        print(f"[{request_id:03d}] ERRO: {str(e)}")
+
+async def main():
+    print(f"Iniciando teste de estresse: {TOTAL_REQUESTS} requisições, concorrência={CONCURRENCY}")
+    start_global = time.perf_counter()
+
+    semaphore = asyncio.Semaphore(CONCURRENCY)
+
+    async with aiohttp.ClientSession() as session:
+        async def limited_send(req_id):
+            async with semaphore:
+                await send_request(session, req_id)
+
+        tasks = [limited_send(i) for i in range(TOTAL_REQUESTS)]
+        await asyncio.gather(*tasks)
+
+    elapsed_global = time.perf_counter() - start_global
+
+    print("\n" + "="*50)
+    print(f"Tempo total: {elapsed_global:.2f}s")
+    print(f"Requisições bem-sucedidas: {success_count}")
+    print(f"Falhas: {error_count}")
+    if responses_time["total"]:
+        avg_time = sum(responses_time["total"]) / len(responses_time["total"])
+        print(f"Tempo médio por requisição: {avg_time:.3f}s")
+    print("\nDetalhamento por status HTTP:")
+    for status, times in responses_time["by_status"].items():
+        print(f"  {status}: {len(times)} ocorrências (média {sum(times)/len(times):.3f}s)")
+
+if __name__ == "__main__":
+    asyncio.run(main())
