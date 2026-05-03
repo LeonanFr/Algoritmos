@@ -80,8 +80,9 @@ function updateSwapTimer() {
     }
 
     const totalSecs = Math.ceil(msUntilSwap / 1000);
-    const mins = Math.floor(totalSecs / 60);
-    const secs = totalSecs % 60;
+    const displaySecs = Math.max(0, totalSecs - 1);
+    const mins = Math.floor(displaySecs / 60);
+    const secs = displaySecs % 60;
     const display = `${mins}:${secs.toString().padStart(2, '0')}`;
 
     swapTimerEl.innerHTML = `<i class="fa-solid fa-exchange-alt"></i> Troca em ${display}`;
