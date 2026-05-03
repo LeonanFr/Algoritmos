@@ -608,7 +608,6 @@ async function handleSubmission(type) {
                 submitBtn.disabled = true;
                 if (editor) editor.updateOptions({ readOnly: true });
                 if (socket) socket.close();
-                if (globalTimerInterval) clearInterval(globalTimerInterval);
             } else {
                 const errorMsg = result.message || 'Falha na submissão final';
                 showConsole(`<div class="test-case-box case-failed">
