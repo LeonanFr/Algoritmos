@@ -38,8 +38,54 @@ let handoverActive = false;
 const handoverOverlay = document.getElementById('handoverOverlay');
 const handoverFill = document.getElementById('handoverFill');
 const handoverSecondsSpan = document.getElementById('handoverSeconds');
+const swapTimerEl = document.getElementById('swapTimer');
 
 let handoverRAF = null;
+let rotationStartMs = null;
+let rotationEndMs = null;
+let playerDurationMs = 0;
+let handoverDurationMs = 0;
+let totalCycleMs = 0;
+let finalExtraMs = 0;
+
+function updateSwapTimer() {
+    if (!swapTimerEl) return;
+
+    if (!rotationStartMs || !rotationEndMs) {
+        swapTimerEl.innerHTML = `<i class="fa-solid fa-exchange-alt"></i> --`;
+        return;
+    }
+
+    const now = Date.now();
+
+    if (now >= rotationEndMs) {
+        swapTimerEl.innerHTML = `<i class="fa-solid fa-exchange-alt"></i> Encerrado`;
+        return;
+    }
+
+    const remainingGlobal = rotationEndMs - now;
+    if (remainingGlobal <= finalExtraMs) {
+        swapTimerEl.innerHTML = `<i class="fa-solid fa-exchange-alt"></i> Final`;
+        return;
+    }
+
+    const elapsed = now - rotationStartMs;
+    const cyclePos = elapsed % totalCycleMs;
+
+    let msUntilSwap;
+    if (cyclePos < playerDurationMs) {
+        msUntilSwap = playerDurationMs - cyclePos;
+    } else {
+        msUntilSwap = totalCycleMs - cyclePos;
+    }
+
+    const totalSecs = Math.ceil(msUntilSwap / 1000);
+    const mins = Math.floor(totalSecs / 60);
+    const secs = totalSecs % 60;
+    const display = `${mins}:${secs.toString().padStart(2, '0')}`;
+
+    swapTimerEl.innerHTML = `<i class="fa-solid fa-exchange-alt"></i> Troca em ${display}`;
+}
 
 function showToast(message, isError = false) {
     let toast = document.querySelector('.toast-notification');
@@ -108,45 +154,60 @@ function hideHandover() {
 let rotationRAF = null;
 
 function startRotationCycle(startTimeISO, endTimeISO, playerMin, handoverSec, finalExtraMin) {
+
+    rotationStartMs = new Date(startTimeISO).getTime();
+    rotationEndMs = new Date(endTimeISO).getTime();
+    playerDurationMs = playerMin * 60 * 1000;
+    handoverDurationMs = handoverSec * 1000;
+    totalCycleMs = playerDurationMs + handoverDurationMs;
+    finalExtraMs = (finalExtraMin || 0) * 60 * 1000;
+
     if (rotationRAF) cancelAnimationFrame(rotationRAF);
 
-    const start = new Date(startTimeISO).getTime();
-    const end = new Date(endTimeISO).getTime();
-    const playerDurationMs = playerMin * 60 * 1000;
-    const handoverMs = handoverSec * 1000;
-    const totalCycleMs = playerDurationMs + handoverMs;
-    const finalExtraMs = (finalExtraMin || 0) * 60 * 1000;
+    const start = rotationStartMs;
+    const end = rotationEndMs;
+    const playerDur = playerDurationMs;
+    const handoverMs = handoverDurationMs;
+    const totalMs = totalCycleMs;
+    const finalMs = finalExtraMs;
+
+    updateSwapTimer();
 
     function checkRotation() {
         if (tournamentEnded || teamCompleted) {
             if (handoverActive) hideHandover();
+            updateSwapTimer();
             return;
         }
 
         const now = Date.now();
         const remainingGlobal = end - now;
 
-        if (remainingGlobal <= finalExtraMs) {
+        if (remainingGlobal <= finalMs) {
             if (handoverActive) hideHandover();
+            updateSwapTimer();
             rotationRAF = requestAnimationFrame(checkRotation);
             return;
         }
 
         const elapsed = now - start;
-        const cyclePosition = elapsed % totalCycleMs;
+        const cyclePos = elapsed % totalMs;
 
-        if (cyclePosition < playerDurationMs) {
+        if (cyclePos < playerDur) {
             if (handoverActive) hideHandover();
         } else {
             if (!handoverActive) {
-                const remainingInWindow = (handoverMs - (cyclePosition - playerDurationMs)) / 1000;
+                const remainingInWindow = (handoverMs - (cyclePos - playerDur)) / 1000;
                 if (remainingInWindow > 0) {
                     showHandover(remainingInWindow);
                 }
             }
         }
+
+        updateSwapTimer();
         rotationRAF = requestAnimationFrame(checkRotation);
     }
+
     rotationRAF = requestAnimationFrame(checkRotation);
 }
 
@@ -295,6 +356,7 @@ function startTournamentCountdown(endTimeISO) {
             globalTimerInterval = null;
             tournamentEnded = true;
             if (handoverActive) hideHandover();
+            updateSwapTimer();
             showConsole('<i class="fa-solid fa-clock"></i> Tempo do torneio esgotado!', true);
             testBtn.disabled = true;
             submitBtn.disabled = true;
