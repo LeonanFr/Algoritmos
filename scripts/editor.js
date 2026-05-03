@@ -6,7 +6,7 @@ let tournament = JSON.parse(localStorage.getItem('tournament'));
 let team = JSON.parse(localStorage.getItem('team'));
 let currentChallenge = null;
 let challenges = [];
-let globalTimerInterval = null;
+let tournamentEndTimeMs = null;
 let cooldownTimers = { test: null, submit: null };
 let editor = null;
 let tournamentStarted = false;
@@ -154,7 +154,6 @@ function hideHandover() {
 let rotationRAF = null;
 
 function startRotationCycle(startTimeISO, endTimeISO, playerMin, handoverSec, finalExtraMin) {
-
     rotationStartMs = new Date(startTimeISO).getTime();
     rotationEndMs = new Date(endTimeISO).getTime();
     playerDurationMs = playerMin * 60 * 1000;
@@ -164,40 +163,36 @@ function startRotationCycle(startTimeISO, endTimeISO, playerMin, handoverSec, fi
 
     if (rotationRAF) cancelAnimationFrame(rotationRAF);
 
-    const start = rotationStartMs;
-    const end = rotationEndMs;
-    const playerDur = playerDurationMs;
-    const handoverMs = handoverDurationMs;
-    const totalMs = totalCycleMs;
-    const finalMs = finalExtraMs;
-
     updateSwapTimer();
+    updateTotalTimer();
 
     function checkRotation() {
         if (tournamentEnded || teamCompleted) {
             if (handoverActive) hideHandover();
             updateSwapTimer();
+            updateTotalTimer();
             return;
         }
 
         const now = Date.now();
-        const remainingGlobal = end - now;
+        const remainingGlobal = rotationEndMs - now;
 
-        if (remainingGlobal <= finalMs) {
+        if (remainingGlobal <= finalExtraMs) {
             if (handoverActive) hideHandover();
             updateSwapTimer();
+            updateTotalTimer();
             rotationRAF = requestAnimationFrame(checkRotation);
             return;
         }
 
-        const elapsed = now - start;
-        const cyclePos = elapsed % totalMs;
+        const elapsed = now - rotationStartMs;
+        const cyclePos = elapsed % totalCycleMs;
 
-        if (cyclePos < playerDur) {
+        if (cyclePos < playerDurationMs) {
             if (handoverActive) hideHandover();
         } else {
             if (!handoverActive) {
-                const remainingInWindow = (handoverMs - (cyclePos - playerDur)) / 1000;
+                const remainingInWindow = (handoverDurationMs - (cyclePos - playerDurationMs)) / 1000;
                 if (remainingInWindow > 0) {
                     showHandover(remainingInWindow);
                 }
@@ -205,6 +200,7 @@ function startRotationCycle(startTimeISO, endTimeISO, playerMin, handoverSec, fi
         }
 
         updateSwapTimer();
+        updateTotalTimer();
         rotationRAF = requestAnimationFrame(checkRotation);
     }
 
@@ -271,7 +267,7 @@ async function checkIfTournamentAlreadyStarted() {
         const start = new Date(t.startTime);
         if (now >= start) {
             tournamentStarted = true;
-            startTournamentCountdown(t.endTime);
+            tournamentEndTimeMs = new Date(t.endTime).getTime();
             startRotationCycle(t.startTime, t.endTime, t.rotationConfig.playerMinutes, t.rotationConfig.handoverSeconds, t.rotationConfig.finalExtraMin);
             await loadChallenges();
             enableChallengeMode();
@@ -323,7 +319,7 @@ function connectWebSocket() {
             const data = JSON.parse(event.data);
             if (data.event === 'TOURNAMENT_START' && !tournamentStarted) {
                 tournamentStarted = true;
-                startTournamentCountdown(data.endTime);
+                tournamentEndTimeMs = new Date(data.endTime).getTime();
                 startRotationCycle(data.startTime, data.endTime, data.config.playerMinutes, data.config.handoverSeconds, data.config.finalExtraMin);
                 loadChallenges();
                 enableChallengeMode();
@@ -338,33 +334,18 @@ function connectWebSocket() {
     };
 }
 
-function startTournamentCountdown(endTimeISO) {
-    if (globalTimerInterval) {
-        clearInterval(globalTimerInterval);
-        globalTimerInterval = null;
+function updateTotalTimer() {
+    const timerEl = document.getElementById('tournamentTimer');
+    if (!timerEl) return;
+    if (!tournamentEndTimeMs) {
+        timerEl.innerHTML = `<i class="fa-regular fa-clock"></i> 00:00`;
+        return;
     }
-    const end = new Date(endTimeISO);
-    const updateTimer = () => {
-        const now = new Date();
-        const diff = Math.max(0, end - now);
-        const minutes = Math.floor(diff / 60000);
-        const seconds = Math.floor((diff % 60000) / 1000);
-        const timerEl = document.getElementById('tournamentTimer');
-        if (timerEl) timerEl.innerHTML = `<i class="fa-solid fa-clock"></i> ${minutes}:${seconds.toString().padStart(2, '0')}`;
-        if (diff <= 0 && !tournamentEnded) {
-            clearInterval(globalTimerInterval);
-            globalTimerInterval = null;
-            tournamentEnded = true;
-            if (handoverActive) hideHandover();
-            updateSwapTimer();
-            showConsole('<i class="fa-solid fa-clock"></i> Tempo do torneio esgotado!', true);
-            testBtn.disabled = true;
-            submitBtn.disabled = true;
-            if (editor) editor.updateOptions({ readOnly: true });
-        }
-    };
-    updateTimer();
-    globalTimerInterval = setInterval(updateTimer, 250);
+    const now = Date.now();
+    const diff = Math.max(0, tournamentEndTimeMs - now);
+    const minutes = Math.floor(diff / 60000);
+    const seconds = Math.floor((diff % 60000) / 1000);
+    timerEl.innerHTML = `<i class="fa-regular fa-clock"></i> ${minutes}:${seconds.toString().padStart(2, '0')}`;
 }
 
 function formatDescription(text) {
