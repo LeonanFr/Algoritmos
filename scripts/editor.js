@@ -12,6 +12,7 @@ let editor = null;
 let tournamentStarted = false;
 let tournamentEnded = false;
 let teamCompleted = false;
+let totalPlayerTurns = 0;
 
 const ledRed = document.getElementById('ledRed');
 const ledAmber = document.getElementById('ledAmber');
@@ -70,6 +71,13 @@ function updateSwapTimer() {
     }
 
     const elapsed = now - rotationStartMs;
+    const cycleIndex = Math.floor(elapsed / totalCycleMs);
+
+    if (cycleIndex >= totalPlayerTurns) {
+        swapTimerEl.innerHTML = `<i class="fa-solid fa-exchange-alt"></i> Final`;
+        return;
+    }
+
     const cyclePos = elapsed % totalCycleMs;
 
     let msUntilSwap;
@@ -154,13 +162,16 @@ function hideHandover() {
 
 let rotationRAF = null;
 
-function startRotationCycle(startTimeISO, endTimeISO, playerMin, handoverSec, finalExtraMin) {
+function startRotationCycle(startTimeISO, endTimeISO, playerMin, playerCount, rotationRounds, handoverSec, finalExtraMin) {
     rotationStartMs = new Date(startTimeISO).getTime();
     rotationEndMs = new Date(endTimeISO).getTime();
+
     playerDurationMs = playerMin * 60 * 1000;
     handoverDurationMs = handoverSec * 1000;
     totalCycleMs = playerDurationMs + handoverDurationMs;
     finalExtraMs = (finalExtraMin || 0) * 60 * 1000;
+
+    totalPlayerTurns = playerCount * rotationRounds;
 
     if (rotationRAF) cancelAnimationFrame(rotationRAF);
 
@@ -176,6 +187,15 @@ function startRotationCycle(startTimeISO, endTimeISO, playerMin, handoverSec, fi
         }
 
         const now = Date.now();
+
+        if (now >= rotationEndMs) {
+            if (handoverActive) hideHandover();
+            tournamentEnded = true;
+            updateSwapTimer();
+            updateTotalTimer();
+            return;
+        }
+
         const remainingGlobal = rotationEndMs - now;
 
         if (remainingGlobal <= finalExtraMs) {
@@ -187,6 +207,16 @@ function startRotationCycle(startTimeISO, endTimeISO, playerMin, handoverSec, fi
         }
 
         const elapsed = now - rotationStartMs;
+        const cycleIndex = Math.floor(elapsed / totalCycleMs);
+
+        if (cycleIndex >= totalPlayerTurns) {
+            if (handoverActive) hideHandover();
+            updateSwapTimer();
+            updateTotalTimer();
+            rotationRAF = requestAnimationFrame(checkRotation);
+            return;
+        }
+
         const cyclePos = elapsed % totalCycleMs;
 
         if (cyclePos < playerDurationMs) {
@@ -269,7 +299,15 @@ async function checkIfTournamentAlreadyStarted() {
         if (now >= start) {
             tournamentStarted = true;
             tournamentEndTimeMs = new Date(t.endTime).getTime();
-            startRotationCycle(t.startTime, t.endTime, t.rotationConfig.playerMinutes, t.rotationConfig.handoverSeconds, t.rotationConfig.finalExtraMin);
+            startRotationCycle(
+                t.startTime,
+                t.endTime,
+                t.rotationConfig.playerMinutes,
+                t.rotationConfig.playerCount,
+                t.rotationConfig.rotationRounds,
+                t.rotationConfig.handoverSeconds,
+                t.rotationConfig.finalExtraMinutes ?? t.rotationConfig.finalExtraMin
+            );
             await loadChallenges();
             enableChallengeMode();
             return true;
@@ -321,7 +359,15 @@ function connectWebSocket() {
             if (data.event === 'TOURNAMENT_START' && !tournamentStarted) {
                 tournamentStarted = true;
                 tournamentEndTimeMs = new Date(data.endTime).getTime();
-                startRotationCycle(data.startTime, data.endTime, data.config.playerMinutes, data.config.handoverSeconds, data.config.finalExtraMin);
+                startRotationCycle(
+                    data.startTime,
+                    data.endTime,
+                    data.config.playerMinutes,
+                    data.config.playerCount,
+                    data.config.rotationRounds,
+                    data.config.handoverSeconds,
+                    data.config.finalExtraMinutes ?? data.config.finalExtraMin
+                );
                 loadChallenges();
                 enableChallengeMode();
             }
