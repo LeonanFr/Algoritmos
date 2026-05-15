@@ -11,6 +11,10 @@ let cooldownTimers = { test: null, submit: null };
 let editor = null;
 let tournamentStarted = false;
 let tournamentEnded = false;
+let tournamentEndRedirectTimeout = null;
+let submissionInProgress = false;
+let pendingEndRedirect = false;
+let redirectingToIndex = false;
 let teamCompleted = false;
 let totalPlayerTurns = 0;
 
@@ -122,6 +126,7 @@ function showHandover(durationSeconds) {
     handoverOverlay.style.display = 'flex';
     testBtn.disabled = true;
     submitBtn.disabled = true;
+
     if (editor) editor.updateOptions({ readOnly: true });
 
     function updateHandover() {
@@ -162,9 +167,85 @@ function hideHandover() {
 
 let rotationRAF = null;
 
+function finishTournamentAndGoHome() {
+    tournamentEnded = true;
+
+    if (handoverActive) hideHandover();
+
+    testBtn.disabled = true;
+    submitBtn.disabled = true;
+
+    if (editor) {
+        editor.updateOptions({ readOnly: true });
+    }
+
+    if (socket) {
+        socket.close();
+        socket = null;
+    }
+
+    if (rotationRAF) {
+        cancelAnimationFrame(rotationRAF);
+        rotationRAF = null;
+    }
+
+    if (handoverRAF) {
+        cancelAnimationFrame(handoverRAF);
+        handoverRAF = null;
+    }
+
+    if (cooldownTimers.test) {
+        clearInterval(cooldownTimers.test);
+        cooldownTimers.test = null;
+    }
+
+    if (cooldownTimers.submit) {
+        clearInterval(cooldownTimers.submit);
+        cooldownTimers.submit = null;
+    }
+
+    updateSwapTimer();
+    updateTotalTimer();
+
+    if (submissionInProgress) {
+        pendingEndRedirect = true;
+        return;
+    }
+
+    if (redirectingToIndex) return;
+    redirectingToIndex = true;
+
+    localStorage.removeItem('tournament');
+    localStorage.removeItem('team');
+
+    window.location.href = 'index.html';
+}
+
+function scheduleTournamentEndRedirect(endTimeISO) {
+    if (tournamentEndRedirectTimeout) {
+        clearTimeout(tournamentEndRedirectTimeout);
+        tournamentEndRedirectTimeout = null;
+    }
+
+    const endMs = new Date(endTimeISO).getTime();
+    if (!Number.isFinite(endMs)) return;
+
+    const delay = endMs - Date.now();
+
+    if (delay <= 0) {
+        finishTournamentAndGoHome();
+        return;
+    }
+
+    tournamentEndRedirectTimeout = setTimeout(() => {
+        finishTournamentAndGoHome();
+    }, delay + 250);
+}
+
 function startRotationCycle(startTimeISO, endTimeISO, playerMin, playerCount, rotationRounds, handoverSec, finalExtraMin) {
     rotationStartMs = new Date(startTimeISO).getTime();
     rotationEndMs = new Date(endTimeISO).getTime();
+    scheduleTournamentEndRedirect(endTimeISO);
 
     playerDurationMs = playerMin * 60 * 1000;
     handoverDurationMs = handoverSec * 1000;
@@ -189,10 +270,7 @@ function startRotationCycle(startTimeISO, endTimeISO, playerMin, playerCount, ro
         const now = Date.now();
 
         if (now >= rotationEndMs) {
-            if (handoverActive) hideHandover();
-            tournamentEnded = true;
-            updateSwapTimer();
-            updateTotalTimer();
+            finishTournamentAndGoHome();
             return;
         }
 
@@ -293,7 +371,15 @@ async function fetchTournamentStatus() {
 
 async function checkIfTournamentAlreadyStarted() {
     const t = await fetchTournamentStatus();
-    if (t && t.status === 'active' && t.startTime) {
+
+    if (!t) return false;
+
+    if (t.status === 'finished' || (t.endTime && Date.now() >= new Date(t.endTime).getTime())) {
+        finishTournamentAndGoHome();
+        return true;
+    }
+
+    if (t.status === 'active' && t.startTime) {
         const now = new Date();
         const start = new Date(t.startTime);
         if (now >= start) {
@@ -313,6 +399,7 @@ async function checkIfTournamentAlreadyStarted() {
             return true;
         }
     }
+
     return false;
 }
 
@@ -598,6 +685,7 @@ async function handleSubmission(type) {
 
     btn.disabled = true;
     showLoading(true);
+    submissionInProgress = true;
 
     try {
         const result = await submitCode({
@@ -680,7 +768,16 @@ async function handleSubmission(type) {
             showConsole(`<div class="console-error"><i class="fa-solid fa-bug"></i> Erro: ${err.message}</div>`);
         }
     } finally {
+        submissionInProgress = false;
+
+        if (pendingEndRedirect) {
+            pendingEndRedirect = false;
+            finishTournamentAndGoHome();
+            return;
+        }
+
         showLoading(false);
+
         if (!cooldownTimers[type] && !handoverActive && tournamentStarted && !tournamentEnded && !teamCompleted) {
             btn.disabled = false;
         }
